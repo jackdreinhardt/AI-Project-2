@@ -1,5 +1,6 @@
 from __future__ import print_function
 from collections import deque
+import copy
 
 AND = '^'
 OR = 'v'
@@ -7,10 +8,68 @@ NOT = '~'
 IMPLIES = '->'
 BICONDITIONAL = '<->'
 
+class Clause:
+    def __init__(self, c=""):
+        c1 = c.replace(OR, "")
+        self.positives = []
+        self.negatives = []
+
+        while c1 != "":
+            if c1[0] == NOT: # find all negations
+                # add symbol corresponding to the negation to negatives
+                self.negatives.append(c1[1])
+                # remove negations and corresponding symbol from b
+                c1 = c1.replace(c1[0:2], "", 1)
+            else:
+                # add first symbol to positives
+                self.positives.append(c1[0])
+                # remove first symbol from
+                c1 = c1.replace(c1[0], "", 1)
+
+    def show(self):
+        str = ""
+        for symbol in self.positives:
+            str += symbol + OR
+        for symbol in self.negatives:
+            str += NOT + symbol + OR
+        str = str[:len(str)-1]
+        print(str)
+
+    def del_positive_symbol(self, s):
+        self.positives.remove(s)
+
+    def del_negative_symbol(self, s):
+        self.negatives.remove(s)
+
+    @staticmethod
+    def combine_clauses(c1, c2):
+        result = Clause()
+        result.positives.extend(c1.positives)
+        result.positives.extend(c2.positives)
+        result.negatives.extend(c1.negatives)
+        result.negatives.extend(c2.negatives)
+        return result
+
 class Belief:
     def __init__(self, cnf):
         cnf = cnf.replace(" ", "")
         self.cnf = cnf
+        self.clauses = []
+
+        idx = cnf.find(AND)
+        while idx > -1:
+            c = cnf[:idx]
+            cnf = cnf[idx+2:]
+            c = c.replace("(", "")
+            c = c.replace(")", "")
+            clause = Clause(c)
+            self.clauses.append(clause)
+            idx = cnf.find(AND)
+        c = cnf
+        c = c.replace("(", "")
+        c = c.replace(")", "")
+        clause = Clause(c)
+        self.clauses.append(clause)
 
     def show(self):
         print(self.cnf, end='')
@@ -32,81 +91,36 @@ class BeliefBase:
         print(' |')
 
     def resolve(self, c1, c2):
-        # assume c1 and c2 only are each a single clause from a sentence in CNF
-        c1_copy = c1
-        c2_copy = c2
-        c1 = c1.replace(OR, "")
-        c2 = c2.replace(OR, "")
+        c1_copy = copy.copy(c1)
+        c2_copy = copy.copy(c2)
 
-        c1_positives = []
-        c1_negatives = []
-        c2_positives = []
-        c2_negatives = []
-
-        while c1 != "":
-            if c1[0] == NOT: # find all negations
-                # add symbol corresponding to the negation to negatives
-                c1_negatives.append(c1[1])
-                # remove negations and corresponding symbol from b
-                c1 = c1.replace(c1[0:2], "", 1)
-            else:
-                # add first symbol to positives
-                c1_positives.append(c1[0])
-                # remove first symbol from
-                c1 = c1.replace(c1[0], "", 1)
-
-        while c2 != "":
-            if c2[0] == NOT: # find all negations
-                # add symbol corresponding to the negation to negatives
-                c2_negatives.append(c2[1])
-                # remove negations and corresponding symbol from b
-                c2 = c2.replace(c2[0:2], "", 1)
-            else:
-                # add first symbol to positives
-                c2_positives.append(c2[0])
-                # remove first symbol from
-                c2 = c2.replace(c2[0], "", 1)
-
-        # find all complements
-        complements = []
-        for c1_symbol in c1_positives:
-            for c2_symbol in c2_negatives:
+        # find and remove all complements
+        for c1_symbol in c1.positives:
+            for c2_symbol in c2.negatives:
                 # if the symbols match, remove the symbols from c1 and c2
                 if c1_symbol == c2_symbol:
-                    c1_copy = c1_copy.replace(c1_symbol, "", 1)
-                    c2_copy = c2_copy.replace(NOT+c2_symbol, "", 1)
-        for c2_symbol in c2_positives:
-            for c1_symbol in c1_negatives:
+                    c1_copy.del_positive_symbol(c1_symbol)
+                    c2_copy.del_negative_symbol(c2_symbol)
+        for c2_symbol in c2.positives:
+            for c1_symbol in c1.negatives:
                 # if the symbols match, remove the symbols from c1 and c2
                 if c2_symbol == c1_symbol:
-                    c2_copy = c2_copy.replace(c2_symbol, "", 1)
-                    c1_copy = c1_copy.replace(NOT+c1_symbol, "", 1)
+                    c1_copy.del_negative_symbol(c1_symbol)
+                    c2_copy.del_positive_symbol(c2_symbol)
 
         # remove redundant symbols
-        for c1_symbol in c1_positives:
-            for c2_symbol in c2_positives:
+        for c1_symbol in c1.positives:
+            for c2_symbol in c2.positives:
                 # if the symbols match, remove the symbol from c2
                 if c1_symbol == c2_symbol:
-                    c2_copy = c2_copy.replace(c2_symbol, "", 1)
-        for c1_symbol in c1_negatives:
-            for c2_symbol in c2_negatives:
+                    c2_copy.del_positive_symbol(c2_symbol)
+        for c1_symbol in c1.negatives:
+            for c2_symbol in c2.negatives:
                 # if the symbols match, remove the symbol from c2
                 if c1_symbol == c2_symbol:
-                    c2_copy = c2_copy.replace(NOT+c2_symbol, "", 1)
+                    c2_copy.del_negative_symbol(c2_symbol)
 
-        resolvent = ""
-        if c1_copy == "" or c2_copy == "":
-            resolvent = c1_copy + c2_copy
-        else:
-            resolvent = c1_copy + OR + c2_copy
-
-        idx = resolvent.find(OR+OR)
-        while idx > -1:
-            resolvent = resolvent.replace(OR+OR, OR)
-            idx = resolvent.find(OR+OR)
-
-        if resolvent[len(resolvent)-1] == OR:
-            resolvent = resolvent[:len(resolvent)-1]
+        resolvent = Clause.combine_clauses(c1_copy, c2_copy)
 
         # return the resolvent
         return resolvent
@@ -122,11 +136,17 @@ class BeliefBase:
 
 if __name__ == '__main__':
     b = BeliefBase()
-    b1 = Belief("c^a^b")
+    b1 = Belief("(avbv~cvd)^(av~bvcvd)")
     b.add_belief(b1)
     #b.show_belief_base()
 
-    c1 = "avbv~cvd"
-    c2 = "av~bvcvd"
+    c1 = b1.clauses[0]
+    c2 = b1.clauses[1]
+
+    print("Clauses: ")
+    c1.show()
+    c2.show()
+
+    print("\nResolvent: ")
     result = b.resolve(c1,c2)
-    print(result)
+    result.show()
