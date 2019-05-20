@@ -1,6 +1,7 @@
 from __future__ import print_function
 from collections import deque
 import copy
+import time
 
 AND = '^'
 OR = 'v'
@@ -35,11 +36,25 @@ class Clause:
         str = str[:len(str)-1]
         print(str)
 
+    def to_string(self):
+        str = ""
+        for symbol in self.positives:
+            str += symbol + OR
+        for symbol in self.negatives:
+            str += NOT + symbol + OR
+        str = str[:len(str)-1]
+        return str
+
     def del_positive_symbol(self, s):
         self.positives.remove(s)
 
     def del_negative_symbol(self, s):
         self.negatives.remove(s)
+
+    def isEmpty(self):
+        if len(self.positives) == 0 and len(self.negatives) == 0:
+            return True
+        return False
 
     @staticmethod
     def combine_clauses(c1, c2):
@@ -50,49 +65,141 @@ class Clause:
         result.negatives.extend(c2.negatives)
         return result
 
+    @staticmethod
+    def copy(c):
+        result = Clause()
+        for symbol in c.positives:
+            result.positives.append(symbol)
+        for symbol in c.negatives:
+            result.negatives.append(symbol)
+        return result
+
+    @staticmethod
+    def equals(c1, c2):
+        if len(c1.positives) != len(c2.positives) or len(c1.negatives) != len(c2.negatives):
+            return False
+        for symbol1 in c1.positives: # ensure each positive symbol has a match
+            match = False
+            for symbol2 in c2.positives:
+                if symbol1 == symbol2:
+                    match = True
+                    break
+            if match == False:
+                return False
+        for symbol1 in c1.negatives: # ensure each negative symbol has a match
+            match = False
+            for symbol2 in c2.negatives:
+                if symbol1 == symbol2:
+                    match = True
+                    break
+            if match == False:
+                return False
+        return True
+
 class Belief:
-    def __init__(self, cnf):
+    def __init__(self, cnf, negate=False):
         cnf = cnf.replace(" ", "")
-        self.cnf = cnf
+        cnf = cnf.replace("~~", "") # eliminate any double negations
         self.clauses = []
 
-        idx = cnf.find(AND)
-        while idx > -1:
-            c = cnf[:idx]
-            cnf = cnf[idx+2:]
+        if negate == False:
+            idx = cnf.find(AND)
+            while idx > -1:
+                c = cnf[:idx]
+                cnf = cnf[idx+1:]
+                c = c.replace("(", "")
+                c = c.replace(")", "")
+                clause = Clause(c)
+                self.clauses.append(clause)
+                idx = cnf.find(AND)
+            c = cnf
             c = c.replace("(", "")
             c = c.replace(")", "")
             clause = Clause(c)
             self.clauses.append(clause)
+
+        else:
+            temp_clauses = []
             idx = cnf.find(AND)
-        c = cnf
-        c = c.replace("(", "")
-        c = c.replace(")", "")
-        clause = Clause(c)
-        self.clauses.append(clause)
+            while idx > -1:
+                c = cnf[:idx]
+                cnf = cnf[idx+1:]
+                c = c.replace("(", "")
+                c = c.replace(")", "")
+                clause = Clause(c)
+                temp_clauses.append(clause)
+                idx = cnf.find(AND)
+            c = cnf
+            c = c.replace("(", "")
+            c = c.replace(")", "")
+            clause = Clause(c)
+            temp_clauses.append(clause)
+
+            # negate each clause
+            negated_clauses = []
+            for c in temp_clauses:
+                result = self.negate_clause(c)
+                negated_clauses.append(result)
+
+            # distribute to return to cnf
+            while(len(negated_clauses) > 1):
+                clause_set1 = negated_clauses[0]
+                clause_set2 = negated_clauses[1]
+                new_clauses = []
+                for c1 in clause_set1:
+                    for c2 in clause_set2:
+                        new_c = Clause.combine_clauses(c1, c2)
+                        new_clauses.append(new_c)
+                negated_clauses[0] = new_clauses
+                del(negated_clauses[1])
+
+
+            for c in negated_clauses[0]:
+                self.clauses.append(c)
 
     def show(self):
-        print(self.cnf, end='')
+        total_str = ''
+        for c in self.clauses:
+            str = '(' + c.to_string() + ")^"
+            total_str += str
+        total_str = total_str[:len(total_str)-1]
+        print(total_str)
+
+    def to_string(self):
+        total_str = ''
+        for c in self.clauses:
+            str = '(' + c.to_string() + ")^"
+            total_str += str
+        total_str = total_str[:len(total_str)-1]
+        return total_str
+
+    def negate_clause(self, c):
+        new_clauses = []
+        for symbol in c.positives:
+            new_c = Clause('~'+symbol)
+            new_clauses.append(new_c)
+        for symbol in c.negatives:
+            new_c = Clause(symbol)
+            new_clauses.append(new_c)
+        return new_clauses
 
 class BeliefBase:
     def __init__(self):
-        self.d = deque()
+        self.beliefs = []
 
     def add_belief(self, b):
-        self.d.append(b)
+        self.beliefs.append(b)
 
     def del_belief(self, b):
-        self.d.remove(b)
+        self.beliefs.remove(b)
 
     def show_belief_base(self):
-        print('| ', end='')
-        for ele in self.d:
+        for ele in self.beliefs:
             ele.show()
-        print(' |')
 
     def resolve(self, c1, c2):
-        c1_copy = copy.copy(c1)
-        c2_copy = copy.copy(c2)
+        c1_copy = Clause.copy(c1)
+        c2_copy = Clause.copy(c2)
 
         # find and remove all complements
         for c1_symbol in c1.positives:
@@ -125,10 +232,37 @@ class BeliefBase:
         # return the resolvent
         return resolvent
 
-    def entails(self, b):
+    def entails(self, belief):
         # method that checks if the belief base entails b using resolution
+        new_b = Belief(belief, True) # create negation of the belief
 
-        return
+        # create a list containing all clauses in KB ^ ~belief
+        all_clauses = []
+        all_clauses.extend(new_b.clauses)
+        for b in self.beliefs:
+            all_clauses.extend(b.clauses)
+
+        clause_added = True
+        while(clause_added): # loop until a clause can no longer be added
+            clause_added = False
+            for c1 in all_clauses:
+                for c2 in all_clauses:
+                    if not Clause.equals(c1, c2): # if c1 and c2 are not equal
+                        result = self.resolve(c1, c2) # resolve c1 and c2
+                        if result.isEmpty(): # if the resolvent is empty
+                            return True # then the KB entails the belief
+
+                        # add resolvent if it is unique
+                        add_clause = True
+                        for c3 in all_clauses:
+                            if Clause.equals(result, c3):
+                                add_clause = False
+                        if add_clause:
+                            clause_added = True
+                            all_clauses.append(result)
+                        time.sleep(1)
+
+        return False
 
     def contract(self, b):
         # uses partial meet contraction to remove belief b from the belief base
@@ -137,16 +271,31 @@ class BeliefBase:
 if __name__ == '__main__':
     b = BeliefBase()
     b1 = Belief("(avbv~cvd)^(av~bvcvd)")
+    #b1 = Belief("(avbv~cvd)^(avbv~cvd)")
+    #b1 = Belief("a^~a")
+    #b1 = Belief("(avb)^(cvd)^(evf)", True)
     b.add_belief(b1)
-    #b.show_belief_base()
+
+    print("Belief Base:")
+    b.show_belief_base()
 
     c1 = b1.clauses[0]
     c2 = b1.clauses[1]
 
-    print("Clauses: ")
-    c1.show()
-    c2.show()
+    print("\nClauses: ")
+    for c in b1.clauses:
+        c.show()
 
-    print("\nResolvent: ")
+    eq = Clause.equals(c1, c2)
+    print("Are the clauses equal? " + str(eq))
+
+    print("\nResolvent of clause 1 and clause 2: ")
     result = b.resolve(c1,c2)
     result.show()
+
+    empty = result.isEmpty()
+    print("Is the resolvent empty? " + str(empty))
+
+    belief = "avd"
+    entails = b.entails(belief)
+    print("\nDoes the KB ential " + belief + "? " + str(entails))
