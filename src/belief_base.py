@@ -96,6 +96,53 @@ class Clause:
                 return False
         return True
 
+    @staticmethod
+    def negate_clause(c):
+        new_clauses = []
+        for symbol in c.positives:
+            new_c = Clause('~'+symbol)
+            new_clauses.append(new_c)
+        for symbol in c.negatives:
+            new_c = Clause(symbol)
+            new_clauses.append(new_c)
+        return new_clauses
+
+    @staticmethod
+    def resolve(c1, c2):
+        c1_copy = Clause.copy(c1)
+        c2_copy = Clause.copy(c2)
+
+        # find and remove all complements
+        for c1_symbol in c1.positives:
+            for c2_symbol in c2.negatives:
+                # if the symbols match, remove the symbols from c1 and c2
+                if c1_symbol == c2_symbol:
+                    c1_copy.del_positive_symbol(c1_symbol)
+                    c2_copy.del_negative_symbol(c2_symbol)
+        for c2_symbol in c2.positives:
+            for c1_symbol in c1.negatives:
+                # if the symbols match, remove the symbols from c1 and c2
+                if c2_symbol == c1_symbol:
+                    c1_copy.del_negative_symbol(c1_symbol)
+                    c2_copy.del_positive_symbol(c2_symbol)
+
+        # remove redundant symbols
+        for c1_symbol in c1.positives:
+            for c2_symbol in c2.positives:
+                # if the symbols match, remove the symbol from c2
+                if c1_symbol == c2_symbol:
+                    c2_copy.del_positive_symbol(c2_symbol)
+        for c1_symbol in c1.negatives:
+            for c2_symbol in c2.negatives:
+                # if the symbols match, remove the symbol from c2
+                if c1_symbol == c2_symbol:
+                    c2_copy.del_negative_symbol(c2_symbol)
+
+        resolvent = Clause.combine_clauses(c1_copy, c2_copy)
+
+        # return the resolvent
+        return resolvent
+
 class Belief:
     def __init__(self, cnf, negate=False):
         cnf = cnf.replace(" ", "")
@@ -138,7 +185,7 @@ class Belief:
             # negate each clause
             negated_clauses = []
             for c in temp_clauses:
-                result = self.negate_clause(c)
+                result = Clause.negate_clause(c)
                 negated_clauses.append(result)
 
             # distribute to return to cnf
@@ -172,16 +219,6 @@ class Belief:
         total_str = total_str[:len(total_str)-1]
         return total_str
 
-    def negate_clause(self, c):
-        new_clauses = []
-        for symbol in c.positives:
-            new_c = Clause('~'+symbol)
-            new_clauses.append(new_c)
-        for symbol in c.negatives:
-            new_c = Clause(symbol)
-            new_clauses.append(new_c)
-        return new_clauses
-
 class BeliefBase:
     def __init__(self):
         self.beliefs = []
@@ -195,41 +232,6 @@ class BeliefBase:
     def show_belief_base(self):
         for ele in self.beliefs:
             ele.show()
-
-    def resolve(self, c1, c2):
-        c1_copy = Clause.copy(c1)
-        c2_copy = Clause.copy(c2)
-
-        # find and remove all complements
-        for c1_symbol in c1.positives:
-            for c2_symbol in c2.negatives:
-                # if the symbols match, remove the symbols from c1 and c2
-                if c1_symbol == c2_symbol:
-                    c1_copy.del_positive_symbol(c1_symbol)
-                    c2_copy.del_negative_symbol(c2_symbol)
-        for c2_symbol in c2.positives:
-            for c1_symbol in c1.negatives:
-                # if the symbols match, remove the symbols from c1 and c2
-                if c2_symbol == c1_symbol:
-                    c1_copy.del_negative_symbol(c1_symbol)
-                    c2_copy.del_positive_symbol(c2_symbol)
-
-        # remove redundant symbols
-        for c1_symbol in c1.positives:
-            for c2_symbol in c2.positives:
-                # if the symbols match, remove the symbol from c2
-                if c1_symbol == c2_symbol:
-                    c2_copy.del_positive_symbol(c2_symbol)
-        for c1_symbol in c1.negatives:
-            for c2_symbol in c2.negatives:
-                # if the symbols match, remove the symbol from c2
-                if c1_symbol == c2_symbol:
-                    c2_copy.del_negative_symbol(c2_symbol)
-
-        resolvent = Clause.combine_clauses(c1_copy, c2_copy)
-
-        # return the resolvent
-        return resolvent
 
     def entails(self, belief):
         # method that checks if the belief base entails b using resolution
@@ -249,7 +251,7 @@ class BeliefBase:
                 for c2 in all_clauses:
                     if not Clause.equals(c1, c2) and (c1,c2) not in resolved_clauses:
                     # if c1 and c2 are not equal and have not already been resolved
-                        result = self.resolve(c1, c2) # resolve c1 and c2
+                        result = Clause.resolve(c1, c2) # resolve c1 and c2
                         if result.isEmpty(): # if the resolvent is empty
                             return True # then the KB entails the belief
 
@@ -290,12 +292,12 @@ if __name__ == '__main__':
     print("Are the clauses equal? " + str(eq))
 
     print("\nResolvent of clause 1 and clause 2: ")
-    result = b.resolve(c1,c2)
+    result = Clause.resolve(c1,c2)
     result.show()
 
     empty = result.isEmpty()
     print("Is the resolvent empty? " + str(empty))
 
-    belief = "avd"
+    belief = "a^b"
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
