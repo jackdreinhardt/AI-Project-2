@@ -153,7 +153,6 @@ class Belief:
                 negated_clauses[0] = new_clauses
                 del(negated_clauses[1])
 
-
             for c in negated_clauses[0]:
                 self.clauses.append(c)
 
@@ -238,6 +237,7 @@ class BeliefBase:
 
         # create a list containing all clauses in KB ^ ~belief
         all_clauses = []
+        resolved_clauses = []
         all_clauses.extend(new_b.clauses)
         for b in self.beliefs:
             all_clauses.extend(b.clauses)
@@ -247,7 +247,8 @@ class BeliefBase:
             clause_added = False
             for c1 in all_clauses:
                 for c2 in all_clauses:
-                    if not Clause.equals(c1, c2): # if c1 and c2 are not equal
+                    if not Clause.equals(c1, c2) and (c1,c2) not in resolved_clauses:
+                    # if c1 and c2 are not equal and have not already been resolved
                         result = self.resolve(c1, c2) # resolve c1 and c2
                         if result.isEmpty(): # if the resolvent is empty
                             return True # then the KB entails the belief
@@ -260,8 +261,7 @@ class BeliefBase:
                         if add_clause:
                             clause_added = True
                             all_clauses.append(result)
-                        time.sleep(1)
-
+                            resolved_clauses.append((c1,c2))
         return False
 
     def contract(self, b):
@@ -270,11 +270,10 @@ class BeliefBase:
 
 if __name__ == '__main__':
     b = BeliefBase()
-    b1 = Belief("(avbv~cvd)^(av~bvcvd)")
-    #b1 = Belief("(avbv~cvd)^(avbv~cvd)")
-    #b1 = Belief("a^~a")
-    #b1 = Belief("(avb)^(cvd)^(evf)", True)
+    b1 = Belief("(avbv~cvd)^g")
+    b2 = Belief("(av~bvcvd)")
     b.add_belief(b1)
+    b.add_belief(b2)
 
     print("Belief Base:")
     b.show_belief_base()
@@ -283,8 +282,9 @@ if __name__ == '__main__':
     c2 = b1.clauses[1]
 
     print("\nClauses: ")
-    for c in b1.clauses:
-        c.show()
+    for belief in b.beliefs:
+        for c in belief.clauses:
+            c.show()
 
     eq = Clause.equals(c1, c2)
     print("Are the clauses equal? " + str(eq))
