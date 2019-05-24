@@ -42,14 +42,20 @@ lists are initialized when each Clause is created by parsing the string that is 
 is empty and printing or converting the clause to a string. The Clause class also implements static methods to combine clauses, create a copy of a clause,
 check if two clauses are equal, negate a clause, and resolve two clauses.
 
-\subsection{Implementation - Converting String into Beliefs and Clauses}
+\subsection{Implementation - Converting to CNF}
+\label{subsec:implementation_cnf}
+
+\subsection{Implementation - Converting CNF into Beliefs and Clauses}
 \label{subsec:implementation}
+Once the input string is converted into CNF, the string is converted into a list of clauses, which is stored in a belief. Each AND ('$\wedge$') symbol marks the end of
+a clause when in CNF; any spaces, double negations, and parenthesis are removed from the string before it is used to initialize a new clause object. The
+initialization of each clause then removes all OR ('$\vee$') symbols and adds each propositional symbol to either the positive symbol list or the negative symbol list
+(symbols that are negated).
 
 \subsection{Assumptions}
 \label{subsec:assumptions}
-The design and implementation of the belief base makes two important assumptions: (1) that the string representing a belief is already in CNF and (2) that
-each propositional logic symbol is a single character. Assumption one makes it possible to directly apply the resolution algorithm to the clauses in the belief.
-Assumption two was a design choice for robustly implementing the parsing of string and converting the strings into beliefs and clauses.
+The design and implementation of the belief base makes one important assumption: that each propositional logic symbol is a single character. This was a
+design choice for robustly implementing the parsing of string and converting the strings into beliefs and clauses.
 
 \section{Logical Entailment}
 \label{sec:entail}
@@ -68,11 +74,15 @@ resolved clauses. \\
 
 \subsection{Resolution}
 \label{subsec:resolution}
-
+A static method was implemented to resolve two disjunctive clauses in the Clause class. The algorithm first searches for and removes any complementary literals
+in the two clauses. Next, it searches for and removes any redundant symbols (i.e. 'avbvb' would simplify to 'avb'). Finally, the two clauses are combined into
+a single disjunctive clause and returned as the resolvent.
 
 \subsection{Belief Negation}
 \label{subsec:negation}
-
+When checking whether or not a belief is entailed by the belief base, resolution essentially performs a proof by contradiction, which requires negating the input belief.
+To negate the belief, it is first broken up into individual clauses. Each clauses is then negated through the use of De Morgans Law. Distributing $\vee$ over $\wedge$
+then yields the negated belief in CNF, which can be used to check for logical entailment with resolution.
 
 \section{Revision}
 \label{sec:revision}
