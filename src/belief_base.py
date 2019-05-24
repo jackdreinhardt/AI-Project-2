@@ -264,12 +264,104 @@ class BeliefBase:
                             clause_added = True
                             all_clauses.append(result)
                             resolved_clauses.append((c1,c2))
-        return False
+        return False        
 
     def contract(self, b):
         # uses partial meet contraction to remove belief b from the belief base
         return
-
+    
+class convert2CNF:
+    
+    def solveBiconditional(prop):
+        idx = prop.find(BICONDITIONAL)
+        op_position = idx
+        openPar = 0
+        if idx != -1:
+            while idx >= 0:
+                idx -= 1
+                if prop[idx] == "(":
+                    if openPar == 0:
+                        left = prop[0:idx]
+                        middleStart = idx
+                        break
+                    else:
+                        openPar -= 1
+                if prop[idx] == ")":
+                    openPar += 1
+                    
+            idx = op_position
+            openPar = 0
+            while idx < len(prop)-1:
+                idx += 1
+                if prop[idx] == ")":
+                    if openPar == 0:
+                        right = prop[idx+1:len(prop)]
+                        middleEnd = idx
+                        break
+                    else:
+                        openPar -= 1
+                if prop[idx] == "(":
+                    openPar += 1
+                    
+            middlePart = prop[middleStart+1:middleEnd]
+            middlePart = middlePart.split("<->")
+            cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
+            prop = str(left + cnf + right)
+            return prop
+        
+# =============================================================================
+#     def deMorgan(prop):
+#         idx = prop.find(NOT)
+#         if prop[idx+1] == '(':
+#             parenthesisNotClosed = True
+#             while parenthesisNotClosed and idx <= len(prop):
+# =============================================================================
+          
+    def solveImplication(prop):
+        idx = prop.find(IMPLIES)
+        op_position = idx
+        openPar = 0
+        if idx != -1:
+            while idx >= 0:
+                idx -= 1
+                if prop[idx] == "(":
+                    if openPar == 0:
+                        left = prop[0:idx]
+                        middleStart = idx
+                        break
+                    else:
+                        openPar -= 1
+                if prop[idx] == ")":
+                    openPar += 1
+                    
+            idx = op_position
+            openPar = 0
+            while idx < len(prop)-1:
+                idx += 1
+                if prop[idx] == ")":
+                    if openPar == 0:
+                        right = prop[idx+1:len(prop)]
+                        middleEnd = idx
+                        break
+                    else:
+                        openPar -= 1
+                if prop[idx] == "(":
+                    openPar += 1
+                    
+            middlePart = prop[middleStart+1:middleEnd]
+            middlePart = middlePart.split("->")
+            cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
+            prop = left + cnf + right
+            return prop
+            
+    def deMorgan(string1, string2, operator):
+        if operator == AND:
+            cnf = NOT + string1 + OR + NOT + string2
+        elif operator == OR:
+            cnf = NOT + string1 + AND + NOT + string2
+            
+                
+    
 if __name__ == '__main__':
     b = BeliefBase()
     b1 = Belief("(avbv~cvd)^g")
@@ -301,3 +393,14 @@ if __name__ == '__main__':
     belief = "a^b"
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
+    
+    prop = str(input("Please enter a sentence in propositional logic: "))
+    prop = "(" + prop + ")"
+    
+    while prop.find(BICONDITIONAL) != -1:
+        prop = convert2CNF.solveBiconditional(prop)
+    while prop.find(IMPLIES) != -1:
+        prop = str(convert2CNF.solveImplication(prop))
+    #cnf = convert2CNF.deMorgan('p','q',AND)
+    print(prop)
+    #a^((p^q)<->r)
