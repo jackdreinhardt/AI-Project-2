@@ -2,6 +2,7 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
+import queue as q
 
 AND = '^'
 OR = 'v'
@@ -227,13 +228,22 @@ class BeliefBase:
         self.beliefs.append(b)
 
     def del_belief(self, b):
-        self.beliefs.remove(b)
+        for belief in self.beliefs:
+            same_belief = True
+            for c1,c2 in zip(belief.clauses,b.clauses):
+                if not Clause.equals(c1,c2):
+                    same_belief = False
+            if same_belief:
+                self.beliefs.remove(belief)
+
+            
 
     def show_belief_base(self):
         for ele in self.beliefs:
             ele.show()
 
     def entails(self, belief):
+        # belief is a string
         # method that checks if the belief base entails b using resolution
         new_b = Belief(belief, True) # create negation of the belief
 
@@ -267,9 +277,65 @@ class BeliefBase:
         return False        
 
     def contract(self, b):
+
         # uses partial meet contraction to remove belief b from the belief base
         return
-    
+                
+   
+        '''
+        Uses partial meet contraction to remove belief b from the belief base.
+        Flattens the clauses so that each belief contains one clause.
+        Does not return a value, changes self.belief to reflect the contraction of belief b
+
+
+        "Backward Clause Selection" - Jacob
+        frontier = queue of initial state
+        explored = {}
+        loop do
+            if frontier empty then return failure
+            choose node n from frontier
+            remove n from frontier
+            add n to expanded
+            if n does not entail b, then return solution
+            for each child m of n
+                if m not in frontier or expanded nodes
+                    add m to frontier
+        '''
+        self.flatten()
+        frontier = q.Queue()
+        frontier.put(self)
+        expanded = q.Queue()
+        while True:
+            if frontier.empty():
+                self.beliefs = [] # failure case
+                return
+            n = frontier.get()
+            print("=========Expanded:==========")
+            n.show_belief_base()
+            print("============================")
+            expanded.put(n)
+            if not n.entails(b.to_string()):
+                self.beliefs = n.beliefs
+                return
+            for belief_one_clause in n.beliefs:
+                n_copy = copy.deepcopy(n)
+                n_copy.del_belief(belief_one_clause)
+                frontier.put(n_copy)
+
+    def flatten(self):
+        belief = []
+        for b in self.beliefs:
+            for c in b.clauses:
+                belief.append(Belief(c.to_string()))
+        self.beliefs = belief
+
+    def revision(self, b):
+        b_not = Belief(b.to_string(),negate=True)
+        self.contract(b_not)
+        self.add_belief(b)
+
+
+
 class convert2CNF:
     
     def solveBiconditional(prop):
@@ -360,8 +426,7 @@ class convert2CNF:
         elif operator == OR:
             cnf = NOT + string1 + AND + NOT + string2
             
-                
-    
+
 if __name__ == '__main__':
     b = BeliefBase()
     b1 = Belief("(avbv~cvd)^g")
@@ -404,3 +469,15 @@ if __name__ == '__main__':
     #cnf = convert2CNF.deMorgan('p','q',AND)
     print(prop)
     #a^((p^q)<->r)
+
+
+    b_c = BeliefBase()
+    b1 = Belief("p^q^r")
+    b2 = Belief("p^q")
+    b_c.add_belief(b1)
+
+    print("Before: ")
+    b_c.show_belief_base()
+    b_c.revision(b2)
+    print("Result of contraction:")
+    b_c.show_belief_base()
