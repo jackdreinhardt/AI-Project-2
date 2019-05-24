@@ -338,8 +338,7 @@ class BeliefBase:
 
 class convert2CNF:
     
-    def solveBiconditional(prop):
-        idx = prop.find(BICONDITIONAL)
+    def divideSentence(prop, idx):
         op_position = idx
         openPar = 0
         if idx != -1:
@@ -370,61 +369,38 @@ class convert2CNF:
                     openPar += 1
                     
             middlePart = prop[middleStart+1:middleEnd]
-            middlePart = middlePart.split("<->")
-            cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
-            prop = str(left + cnf + right)
-            return prop
+        return left, middlePart, right
+    
+    
+    def solveBiconditional(prop):
+        idx = prop.find(BICONDITIONAL)
+        left, middlePart, right = convert2CNF.divideSentence(prop, idx)
+        middlePart = middlePart.split("<->")
+        cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
+        prop = str(left + cnf + right)
+        return prop
         
-# =============================================================================
-#     def deMorgan(prop):
-#         idx = prop.find(NOT)
-#         if prop[idx+1] == '(':
-#             parenthesisNotClosed = True
-#             while parenthesisNotClosed and idx <= len(prop):
-# =============================================================================
           
     def solveImplication(prop):
         idx = prop.find(IMPLIES)
-        op_position = idx
-        openPar = 0
-        if idx != -1:
-            while idx >= 0:
-                idx -= 1
-                if prop[idx] == "(":
-                    if openPar == 0:
-                        left = prop[0:idx]
-                        middleStart = idx
-                        break
-                    else:
-                        openPar -= 1
-                if prop[idx] == ")":
-                    openPar += 1
-                    
-            idx = op_position
-            openPar = 0
-            while idx < len(prop)-1:
-                idx += 1
-                if prop[idx] == ")":
-                    if openPar == 0:
-                        right = prop[idx+1:len(prop)]
-                        middleEnd = idx
-                        break
-                    else:
-                        openPar -= 1
-                if prop[idx] == "(":
-                    openPar += 1
-                    
-            middlePart = prop[middleStart+1:middleEnd]
-            middlePart = middlePart.split("->")
-            cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
-            prop = left + cnf + right
-            return prop
+        left, middlePart, right = convert2CNF.divideSentence(prop, idx)
+        middlePart = middlePart.split("->")
+        cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
+        prop = left + cnf + right
+        return prop
             
-    def deMorgan(string1, string2, operator):
-        if operator == AND:
-            cnf = NOT + string1 + OR + NOT + string2
-        elif operator == OR:
-            cnf = NOT + string1 + AND + NOT + string2
+    def deMorgan(prop):
+        print(prop)
+        idx = prop.find(NOT)
+        if prop[idx+1] == "(":
+            left, middlePart, right = convert2CNF.divideSentence(prop, idx)
+            print(middlePart)
+# =============================================================================
+#             if operator == AND:
+#                 cnf = NOT + string1 + OR + NOT + string2
+#             elif operator == OR:
+#                 cnf = NOT + string1 + AND + NOT + string2
+# =============================================================================
             
 
 if __name__ == '__main__':
@@ -458,18 +434,6 @@ if __name__ == '__main__':
     belief = "a^b"
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
-    
-    prop = str(input("Please enter a sentence in propositional logic: "))
-    prop = "(" + prop + ")"
-    
-    while prop.find(BICONDITIONAL) != -1:
-        prop = convert2CNF.solveBiconditional(prop)
-    while prop.find(IMPLIES) != -1:
-        prop = str(convert2CNF.solveImplication(prop))
-    #cnf = convert2CNF.deMorgan('p','q',AND)
-    print(prop)
-    #a^((p^q)<->r)
-
 
     b_c = BeliefBase()
     b1 = Belief("p^q^r")
@@ -481,3 +445,18 @@ if __name__ == '__main__':
     b_c.revision(b2)
     print("Result of contraction:")
     b_c.show_belief_base()
+    
+    
+    
+    prop = str(input("Please enter a sentence in propositional logic: "))
+    prop = "(" + prop + ")"
+    
+    while prop.find(BICONDITIONAL) != -1:
+        prop = convert2CNF.solveBiconditional(prop)
+    while prop.find(IMPLIES) != -1:
+        prop = convert2CNF.solveImplication(prop)
+    if prop.find(NOT) != -1:
+        prop = convert2CNF.deMorgan(prop)
+    print(prop)
+    #a^((p^q)<->r)
+    #~(p^q)
