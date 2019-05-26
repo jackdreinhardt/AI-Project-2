@@ -1,4 +1,4 @@
-from globals import *
+from src.globals import *
 
 class convert2CNF:
     @staticmethod
@@ -28,6 +28,10 @@ class convert2CNF:
             print("Solve DISTRIBUTIONS:")
             prop = convert2CNF.or_over_and(prop)
             print("Transformed: " + prop)
+
+        return prop
+
+
             
 # =============================================================================
 #         p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
