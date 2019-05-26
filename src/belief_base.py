@@ -437,13 +437,14 @@ class convert2CNF:
     def detect_distribution(prop, operator):
         in_clause=0
         for s in range(len(prop)):
-            if(in_clause == 1 and prop[s] == operator ):
+            if(in_clause == 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
                 return True
             elif(prop[s]=='('):
                         in_clause+=1
             elif(prop[s]==')'):
                         in_clause-=1
         return False
+    
     @staticmethod
     def distribution(prop , op1 , op2):
         in_clause=0
@@ -454,7 +455,7 @@ class convert2CNF:
         i_start=0
         i_end =len(prop)
         for s in range(len(prop)):
-            if(in_clause ==1 and prop[s]==op1 ):
+            if(in_clause ==1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='(')):
                 #s: index of the OR sign in the prop-string
                 #divide sentence:
                 m=s-1
@@ -489,7 +490,7 @@ class convert2CNF:
                 middlePart = middlePart.replace(")","")
                 print(middlePart)
                 if(middlePart.find(op2)==-1):
-                    break;
+                    return left+'('+middlePart+')'+right
                 arguments = middlePart.split(op1,1)
                 leftPart = arguments[0].split(op2)
                 rightPart = arguments[1].split(op2)
@@ -575,15 +576,7 @@ if __name__ == '__main__':
     
     
     
-    prop = "(~mv(s^p))^((~sv~p)vm)"
-    prop2 = "m^(svp)"
-    print('Distribution')
-    if(convert2CNF.detect_distribution(prop,OR)):
-        prop = convert2CNF.or_over_and(prop)
-        print("Transformed: " + prop)
-    if(convert2CNF.detect_distribution(prop,OR)):
-        prop = convert2CNF.or_over_and(prop)
-        print("Transformed: " + prop)
+    prop = "(m<->(n^p))"
     
     
     while prop.find(BICONDITIONAL) != -1:
@@ -599,9 +592,12 @@ if __name__ == '__main__':
             print("Solve DEMORGAN")
             prop = convert2CNF.deMorgan(prop, c)
             print("Transformed: " + prop)
-    #while(convert2CNF.detect_distribution(prop,OR)):
-     #   prop = convert2CNF.or_over_and(prop)
-      #  print("Transformed: " + prop)
+    while(convert2CNF.detect_distribution(prop,OR)):
+        prop = convert2CNF.or_over_and(prop)
+        print("Transformed: " + prop)
+    
+    
+    print("CNF-Form of input: " + prop)
     
    
     #a^((p^q)<->r)
