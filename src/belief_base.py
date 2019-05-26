@@ -434,6 +434,17 @@ class convert2CNF:
     def and_over_or(prop):
         return convert2CNF.distribution(prop,AND,OR)
     @staticmethod
+    def detect_distribution(prop, operator):
+        in_clause=0
+        for s in range(len(prop)):
+            if(in_clause == 1 and prop[s] == operator ):
+                return True
+            elif(prop[s]=='('):
+                        in_clause+=1
+            elif(prop[s]==')'):
+                        in_clause-=1
+        return False
+    @staticmethod
     def distribution(prop , op1 , op2):
         in_clause=0
         left=''
@@ -449,18 +460,18 @@ class convert2CNF:
                 m=s-1
                 openPar=0
                 while(m>-1):#All characters up to thenext and sign are important
-                    if prop[m]==(AND) and openPar ==0:
+                    if prop[m]==(AND) and openPar <=0:
                         i_start=m
                         break
                     elif(prop[m]=='('):
-                        openPar+=1
-                    elif(prop[m]==')'):
                         openPar-=1
+                    elif(prop[m]==')'):
+                        openPar+=1
                     m-=1
                 m=s+1
                 openPar=0
                 while(m<len(prop)):#All characters up to thenext and sign are important
-                    if prop[m]==(AND) and openPar ==0:
+                    if prop[m]==(AND) and openPar <=0:
                         i_end=m
                         break
                     elif(prop[m]=='('):
@@ -477,6 +488,8 @@ class convert2CNF:
                 middlePart = middlePart.replace("(","")
                 middlePart = middlePart.replace(")","")
                 print(middlePart)
+                if(middlePart.find(op2)==-1):
+                    break;
                 arguments = middlePart.split(op1,1)
                 leftPart = arguments[0].split(op2)
                 rightPart = arguments[1].split(op2)
@@ -492,11 +505,13 @@ class convert2CNF:
                    output+=new_middle_part[s]
                    if s!=len(new_middle_part)-1:
                        output+=op2
+                return left + '('+output+')'+right
             elif prop[s]=='(':
                 in_clause+=1
             elif (prop[s]==')'):
                 in_clause-=1
-        return left + output+right
+        return prop
+        
     
     @staticmethod        
     def isCnf(prop):
@@ -560,16 +575,15 @@ if __name__ == '__main__':
     
     
     
-    prop = "mv(s^p)"
+    prop = "(~mv(s^p))^((~sv~p)vm)"
     prop2 = "m^(svp)"
-    prop = "(" + prop + ")"
-    prop2 = "(" + prop2 + ")"
     print('Distribution')
-    p1 = convert2CNF.distribution(prop,OR,AND)
-    p2 = convert2CNF.distribution(prop2,AND,OR)
-    print(p1)
-    print(p2)
-    
+    if(convert2CNF.detect_distribution(prop,OR)):
+        prop = convert2CNF.or_over_and(prop)
+        print("Transformed: " + prop)
+    if(convert2CNF.detect_distribution(prop,OR)):
+        prop = convert2CNF.or_over_and(prop)
+        print("Transformed: " + prop)
     
     
     while prop.find(BICONDITIONAL) != -1:
@@ -585,6 +599,11 @@ if __name__ == '__main__':
             print("Solve DEMORGAN")
             prop = convert2CNF.deMorgan(prop, c)
             print("Transformed: " + prop)
+    #while(convert2CNF.detect_distribution(prop,OR)):
+     #   prop = convert2CNF.or_over_and(prop)
+      #  print("Transformed: " + prop)
+    
+   
     #a^((p^q)<->r)
     #~(p^q)
     #a^(~((p^q)vb)vc
