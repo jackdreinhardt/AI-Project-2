@@ -284,11 +284,12 @@ class BeliefBase:
         return False        
 
 
-    def contract(self,b):
+    def contract(self, b):
         '''
         Uses partial meet contraction to remove belief b from the belief base.
+        TODO Intersect some of the remainders based on a priority (entrenchment)
         '''
-        return self.remainders(b)
+        self.beliefs = self.remainders(b)[0].beliefs
 
     def remainders(self, b):
         '''
@@ -472,9 +473,8 @@ if __name__ == '__main__':
     b_c.add_belief(b1)
     b_c.add_belief(b2)
     b_c.add_belief(b3)
-    for b in b_c.contract(b4):
-        b.show_belief_base()
-        print("==========")
+    b_c.contract(b4)
+    b_c.show_belief_base()
     
     
     prop = str(input("Please enter a sentence in propositional logic: "))
