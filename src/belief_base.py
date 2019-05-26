@@ -408,9 +408,6 @@ class convert2CNF:
     def solveBiconditional(prop):
         idx = prop.find(BICONDITIONAL)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
-        print("left = " + left)
-        print("middlePart = " + middlePart)
-        print("right = " + right)
         middlePart = middlePart.split("<->")
         cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
         prop = str(left + cnf + right)
@@ -420,46 +417,69 @@ class convert2CNF:
     def solveImplication(prop):
         idx = prop.find(IMPLIES)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
-        print("left = " + left)
-        print("middlePart = " + middlePart)
-        print("right = " + right)
         middlePart = middlePart.split("->")
         cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
         prop = left + cnf + right
         return prop
             
-    def deMorgan(prop, c):
-        left, middlePart, right = convert2CNF.divideSentence(prop, c+1)
-        #middlePart = middlePart + ")"
-        print("left = " + left)
-        print("middlePart = " + middlePart)
-        print("right = " + right)
-        idx = 2
-        openPar = 0
-        #middlePartList = list(middlePart) 
-        while idx <= len(middlePart):
-            if middlePart[idx] == "(":
+# =============================================================================
+#     def deMorgan(prop, c):
+#         left, middlePart, right = convert2CNF.divideSentence(prop, c+1)
+#         print("left = " + left)
+#         print("middlePart = " + middlePart)
+#         print("right = " + right)
+#         idx = 2
+#         openPar = 0
+#         while idx <= len(middlePart):
+#             if middlePart[idx] == "(":
+#                 openPar += 1
+#             elif middlePart[idx] == ")":
+#                 openPar -= 1
+#             if openPar == 0:
+#                 if middlePart[idx] == AND:
+#                     leftString = middlePart[2:idx]
+#                     print("leftString: " + leftString)
+#                     rightString = middlePart[idx+1:len(middlePart)]
+#                     print("rightString: " + rightString)
+#                     middlePart = NOT + leftString + OR + NOT + rightString
+#                     break
+#                 elif middlePart[idx] == OR:
+#                     leftString = middlePart[2:idx]
+#                     print("leftString: " + leftString)
+#                     rightString = middlePart[idx+1:len(middlePart)]
+#                     print("rightString: " + rightString)
+#                     middlePart = NOT + leftString + AND + NOT + rightString
+#                     break
+#             idx += 1
+#         prop = left + "((" + middlePart + ")" + right
+#         return prop
+# =============================================================================
+    
+    def deMorgan(prop, idx):
+        prop = list(prop)
+        del prop[idx]
+        openPar = -1
+        while idx <= len(prop):
+            if prop[idx] == "(":
                 openPar += 1
-            elif middlePart[idx] == ")":
+            elif prop[idx] == ")":
                 openPar -= 1
-            if openPar == 0:
-                if middlePart[idx] == AND:
-                    leftString = middlePart[2:idx]
-                    print("leftString: " + leftString)
-                    rightString = middlePart[idx+1:len(middlePart)]
-                    print("rightString: " + rightString)
-                    middlePart = NOT + leftString + OR + NOT + rightString
-                    break
-                elif middlePart[idx] == OR:
-                    leftString = middlePart[2:idx]
-                    print("leftString: " + leftString)
-                    rightString = middlePart[idx+1:len(middlePart)]
-                    print("rightString: " + rightString)
-                    middlePart = NOT + leftString + AND + NOT + rightString
-                    break
+            elif openPar == 0:
+                if prop[idx] == AND:
+                    prop[idx] = OR
+                elif prop[idx] == OR:
+                    prop[idx] = AND
+                else:
+                    prop.insert(idx, NOT)
+                    idx += 1
+            if openPar == -1:
+                break
             idx += 1
-        prop = left + "((" + middlePart + ")" + right
+        prop = "".join(prop)
         return prop
+    
+
+
     
     
     @staticmethod
@@ -472,7 +492,7 @@ class convert2CNF:
     def detect_distribution(prop, operator):
         in_clause=0
         for s in range(len(prop)):
-            if(in_clause == 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
+            if(in_clause <= 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
                 return True
             elif(prop[s]=='('):
                         in_clause+=1
@@ -490,7 +510,7 @@ class convert2CNF:
         i_start=0
         i_end =len(prop)
         for s in range(len(prop)):
-            if(in_clause ==1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='(')):
+            if in_clause <=1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='('):
                 #s: index of the OR sign in the prop-string
                 #divide sentence:
                 m=s-1
@@ -565,6 +585,20 @@ class convert2CNF:
                 in_clause-=1
         else:
             return True
+        
+    @staticmethod
+    def convert_to_cnf(prop):
+        while prop.find(BICONDITIONAL) != -1:
+            prop = convert2CNF.solveBiconditional(prop)
+        while prop.find(IMPLIES) != -1:
+            prop = convert2CNF.solveImplication(prop)
+        for c in range(len(prop)-1):
+            if prop[c] == NOT and prop[c+1] == "(":
+                prop = convert2CNF.deMorgan(prop, c)
+        while(convert2CNF.detect_distribution(prop,OR)):
+            prop = convert2CNF.or_over_and(prop)
+        return prop
+
 
 if __name__ == '__main__':
     b = BeliefBase()
@@ -621,17 +655,30 @@ if __name__ == '__main__':
         print("Solve IMPLICATION:")
         prop = convert2CNF.solveImplication(prop)
         print("Transformed: " + prop)
+# =============================================================================
+#     for c in range(len(prop)-1):
+#         if prop[c] == NOT and prop[c+1] == "(":
+#             print("Solve DEMORGAN")
+#             prop = convert2CNF.deMorgan(prop, c)
+#             print("Transformed: " + prop)
+# =============================================================================
     for c in range(len(prop)-1):
         if prop[c] == NOT and prop[c+1] == "(":
-            print("Solve DEMORGAN")
+            print("Solve DEMORGAN:")
             prop = convert2CNF.deMorgan(prop, c)
             print("Transformed: " + prop)
+
     while(convert2CNF.detect_distribution(prop,OR)):
         prop = convert2CNF.or_over_and(prop)
         print("Transformed: " + prop)
+    p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
+    p2= convert2CNF.convert_to_cnf("(p->r)")
+    p3= convert2CNF.convert_to_cnf("(p<->q)")
+    p4= convert2CNF.convert_to_cnf("rv(p->q)")
+    p5 = convert2CNF.convert_to_cnf(prop)
     
+    print(p4)
     
-    print("CNF-Form of input: " + prop)
     
    
     #a^((p^q)<->r)
