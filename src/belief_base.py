@@ -426,11 +426,15 @@ class convert2CNF:
         prop = left + "((" + middlePart + ")" + right
         return prop
     
+    
     @staticmethod
-    def distribution(prop,operator1,operator2)
-        
+    def or_over_and(prop):
+        return convert2CNF.distribution(prop,OR,AND)
     @staticmethod
-    def or_over_and(prop,operator1, operator2):
+    def and_over_or(prop):
+        return convert2CNF.distribution(prop,AND,OR)
+    @staticmethod
+    def distribution(prop , op1 , op2):
         in_clause=0
         left=''
         right=''
@@ -438,15 +442,14 @@ class convert2CNF:
         middlePart = prop
         i_start=0
         i_end =len(prop)
-        
         for s in range(len(prop)):
-            if(in_clause ==1 and prop[s]==OR ):
+            if(in_clause ==1 and prop[s]==op1 ):
                 #s: index of the OR sign in the prop-string
                 #divide sentence:
-                m=s
+                m=s-1
                 openPar=0
                 while(m>-1):#All characters up to thenext and sign are important
-                    if prop[m]==('^') and openPar ==0:
+                    if prop[m]==(AND) and openPar ==0:
                         i_start=m
                         break
                     elif(prop[m]=='('):
@@ -454,10 +457,10 @@ class convert2CNF:
                     elif(prop[m]==')'):
                         openPar-=1
                     m-=1
-                m=s
+                m=s+1
                 openPar=0
                 while(m<len(prop)):#All characters up to thenext and sign are important
-                    if prop[m]==('^') and openPar ==0:
+                    if prop[m]==(AND) and openPar ==0:
                         i_end=m
                         break
                     elif(prop[m]=='('):
@@ -465,7 +468,6 @@ class convert2CNF:
                     elif(prop[m]==')'):
                         openPar-=1
                     m+=1
-                
                 #set substrubgs
                 if(i_start!=0):
                     i_start+=1
@@ -475,21 +477,21 @@ class convert2CNF:
                 middlePart = middlePart.replace("(","")
                 middlePart = middlePart.replace(")","")
                 print(middlePart)
-                arguments = middlePart.split('v',1)
-                leftPart = arguments[0].split('^')
-                rightPart = arguments[1].split('^')
+                arguments = middlePart.split(op1,1)
+                leftPart = arguments[0].split(op2)
+                rightPart = arguments[1].split(op2)
                 new_middle_part = ["" for x in range(len(leftPart*len(rightPart)))]
                 i=0
                 for p_left in leftPart:
                     for p_right in rightPart:
-                        new_middle_part[i]='('+p_left+'v'+p_right+')'
+                        new_middle_part[i]='('+p_left+op1+p_right+')'
                         i+=1
        #set together
                 output =""
                 for s in range(len(new_middle_part)):
                    output+=new_middle_part[s]
                    if s!=len(new_middle_part)-1:
-                       output+='^'
+                       output+=op2
             elif prop[s]=='(':
                 in_clause+=1
             elif (prop[s]==')'):
@@ -558,13 +560,16 @@ if __name__ == '__main__':
     
     
     
-    prop = "sv(m^n)"
+    prop = "mv(s^p)"
+    prop2 = "m^(svp)"
     prop = "(" + prop + ")"
+    prop2 = "(" + prop2 + ")"
     print('Distribution')
-    print(prop)
-    p = convert2CNF.or_over_and(prop)
-    print(p)
-    print(convert2CNF.isCnf(p))
+    p1 = convert2CNF.distribution(prop,OR,AND)
+    p2 = convert2CNF.distribution(prop2,AND,OR)
+    print(p1)
+    print(p2)
+    
     
     
     while prop.find(BICONDITIONAL) != -1:
