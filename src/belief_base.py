@@ -443,7 +443,7 @@ class convert2CNF:
     def detect_distribution(prop, operator):
         in_clause=0
         for s in range(len(prop)):
-            if(in_clause == 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
+            if(in_clause <= 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
                 return True
             elif(prop[s]=='('):
                         in_clause+=1
@@ -461,7 +461,7 @@ class convert2CNF:
         i_start=0
         i_end =len(prop)
         for s in range(len(prop)):
-            if(in_clause ==1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='(')):
+            if in_clause <=1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='('):
                 #s: index of the OR sign in the prop-string
                 #divide sentence:
                 m=s-1
@@ -536,6 +536,19 @@ class convert2CNF:
                 in_clause-=1
         else:
             return True
+        
+    @staticmethod
+    def convert_to_cnf(prop):
+        while prop.find(BICONDITIONAL) != -1:
+            prop = convert2CNF.solveBiconditional(prop)
+        while prop.find(IMPLIES) != -1:
+            prop = convert2CNF.solveImplication(prop)
+        for c in range(len(prop)-1):
+            if prop[c] == NOT and prop[c+1] == "(":
+                prop = convert2CNF.deMorgan(prop, c)
+        while(convert2CNF.detect_distribution(prop,OR)):
+            prop = convert2CNF.or_over_and(prop)
+        return prop
 
 if __name__ == '__main__':
     b = BeliefBase()
@@ -600,9 +613,14 @@ if __name__ == '__main__':
     while(convert2CNF.detect_distribution(prop,OR)):
         prop = convert2CNF.or_over_and(prop)
         print("Transformed: " + prop)
+    p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
+    p2= convert2CNF.convert_to_cnf("(p->r)")
+    p3= convert2CNF.convert_to_cnf("(p<->q)")
+    p4= convert2CNF.convert_to_cnf("rv(p->q)")
+    p5 = convert2CNF.convert_to_cnf(prop)
     
+    print(p4)
     
-    print("CNF-Form of input: " + prop)
     
    
     #a^((p^q)<->r)
