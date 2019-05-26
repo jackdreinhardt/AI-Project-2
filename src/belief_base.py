@@ -284,31 +284,24 @@ class BeliefBase:
 
 
         "Backward Clause Selection" - Jacob
-        frontier = queue of initial state
-        explored = {}
+        frontier = initial belief base
         loop do
-            if frontier empty then return failure
-            choose node n from frontier
-            remove n from frontier
-            add n to expanded
+            if frontier empty then return the empty set
+            choose belief base n from frontier
+            remove belief base n from frontier
             if n does not entail b, then return solution
-            for each child m of n
-                if m not in frontier or expanded nodes
-                    add m to frontier
+            for each belief m in belief base n
+                n' = copy of belief base n with m removed
+                add n' to frontier
         '''
         self.flatten()
         frontier = q.Queue()
         frontier.put(self)
-        expanded = q.Queue()
         while True:
             if frontier.empty():
                 self.beliefs = [] # failure case
                 return
             n = frontier.get()
-            print("=========Expanded:==========")
-            n.show_belief_base()
-            print("============================")
-            expanded.put(n)
             if not n.entails(b.to_string()):
                 self.beliefs = n.beliefs
                 return
