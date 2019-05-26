@@ -3,6 +3,7 @@ from collections import deque
 import copy
 import time
 from checkable_queue import CheckableQueue
+from functools import total_ordering
 
 AND = '^'
 OR = 'v'
@@ -204,6 +205,23 @@ class Belief:
             for c in negated_clauses[0]:
                 self.clauses.append(c)
 
+    # not a legitimate ordering, working on a nontrivial implementation
+    def __lt__(self, item):
+        slen = 0; ilen = 0;
+        for s,i in zip(self.clauses,item.clauses):
+            slen += len(s.positives) + len(s.negatives)
+            ilen += len(i.positives) + len(i.negatives)
+        return slen < ilen
+
+    # not a legitimate ordering, working on a nontrivial implementation
+    def __eq__(self, item):
+        slen = 0; ilen = 0;
+        for s,i in zip(self.clauses,item.clauses):
+            slen += len(s.positives) + len(s.negatives)
+            ilen += len(i.positives) + len(i.negatives)
+        return slen == ilen
+
+
     def show(self):
         total_str = ''
         for c in self.clauses:
@@ -223,6 +241,7 @@ class Belief:
 class BeliefBase:
     def __init__(self):
         self.beliefs = []
+        self.entrenchment = 0
 
     def __eq__(self, item):
         for sb,ib in zip(self.beliefs, item.beliefs):
@@ -286,10 +305,20 @@ class BeliefBase:
 
     def contract(self, b):
         '''
-        Uses partial meet contraction to remove belief b from the belief base.
-        TODO Intersect some of the remainders based on a priority (entrenchment)
+        Implements partial meet contraction using the ordering defined in the belief class
+        This ordering satisfies the postulates for epistemic entrenchment.
+        
+        1. the belief base is flattened, so each belief contains one clause
+        2. the beliefs in the belief base are sorted and given a entrenchment rank
+            2.a. entrenchment rank increases with the square (cubed?) root,
+                 therefore, more entrenched beliefs are valued higher
+        3. maximize the entrenchment value (search problem?) of the intersected solutions
         '''
+        self.flatten()
         self.beliefs = self.remainders(b)[0].beliefs
+        # self.show_belief_base()
+        self.beliefs.sort()
+        # self.show_belief_base()
 
     def remainders(self, b):
         '''
@@ -571,7 +600,7 @@ if __name__ == '__main__':
 
     b_c = BeliefBase()
     b1 = Belief("p")
-    b2 = Belief("q")
+    b2 = Belief("~qvp")
     b3 = Belief("r")
     b4 = Belief("p^q")
     b_c.add_belief(b1)
