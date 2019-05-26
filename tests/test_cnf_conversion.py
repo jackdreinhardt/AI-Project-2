@@ -16,13 +16,13 @@ class CNFConversionTests(unittest.TestCase):
 
     def test_implies_cnf(self):
         self.assertEqual(self.c.CNF(f"p{IMPLIES}q"), f"({NOT}p{OR}q)")
-        self.assertEqual(self.c.CNF(f"(p{IMPLIES}q){IMPLIES}r"), f"({NOT}({NOT}p{OR}q){OR}r))")
+        self.assertEqual(self.c.CNF(f"(p{IMPLIES}q){IMPLIES}r"), f"((p{OR}r){AND}({NOT}q{OR}r))")
         self.assertEqual(self.c.CNF(f"p{IMPLIES}q{IMPLIES}r"), f"({NOT}p{OR}({NOT}q{OR}r))")
         self.assertEqual(self.c.CNF(f"p{IMPLIES}q{IMPLIES}r{IMPLIES}s"), f"({NOT}({NOT}({NOT}p{OR}q){OR}r){OR}s)")
 
     def test_biconditional(self):
         self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q".format(BICONDITIONAL)), f"({NOT}p{OR}q){AND}({NOT}q{OR}p)")
-        self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q{BICONDITIONAL}r"), f"({NOT}(({NOT}p{OR}q) {AND} ({NOT}q{OR}p)){OR}r){AND}({NOT}r{OR}(({NOT}p{OR}q) {AND} ({NOT}q{OR}p)))")
+        self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q{BICONDITIONAL}r"), f"({NOT}(({NOT}p{OR}q){AND}({NOT}q{OR}p)){OR}r){AND}({NOT}r{OR}(({NOT}p{OR}q){AND}({NOT}q{OR}p)))")
 
 
 if __name__ == '__main__':
