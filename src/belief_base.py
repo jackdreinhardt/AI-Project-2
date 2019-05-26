@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
-import queue as q
+from checkable_queue import CheckableQueue
 
 AND = '^'
 OR = 'v'
@@ -224,6 +224,13 @@ class BeliefBase:
     def __init__(self):
         self.beliefs = []
 
+    def __eq__(self, item):
+        for sb,ib in zip(self.beliefs, item.beliefs):
+            for sbc,ibc in zip(sb.clauses,ib.clauses):
+                if not Clause.equals(sbc, ibc):
+                    return False
+        return True
+
     def add_belief(self, b):
         self.beliefs.append(b)
 
@@ -276,51 +283,50 @@ class BeliefBase:
                             resolved_clauses.append((c1,c2))
         return False        
 
-    def contract(self, b):
 
-        # uses partial meet contraction to remove belief b from the belief base
-        return
-                
-   
+    def contract(self, b):
         '''
         Uses partial meet contraction to remove belief b from the belief base.
-        Flattens the clauses so that each belief contains one clause.
-        Does not return a value, changes self.belief to reflect the contraction of belief b
+        TODO Intersect some of the remainders based on a priority (entrenchment)
+        '''
+        self.beliefs = self.remainders(b)[0].beliefs
 
+    def remainders(self, b):
+        '''
+        Returns all remainders when introducing belief b into the belief base.
+        Flattens the clauses so that each belief contains one clause
 
         "Backward Clause Selection" - Jacob
-        frontier = queue of initial state
-        explored = {}
+        frontier = initial belief base
         loop do
-            if frontier empty then return failure
-            choose node n from frontier
-            remove n from frontier
-            add n to expanded
+            if frontier empty then return the empty set
+            choose belief base n from frontier
+            remove belief base n from frontier
+            add belief base n to expanded
             if n does not entail b, then return solution
-            for each child m of n
-                if m not in frontier or expanded nodes
-                    add m to frontier
+            for each belief m in belief base n
+                n' = copy of belief base n with m removed
+                if n' not in frontier and n' not in expanded
+                    add n' to frontier
         '''
         self.flatten()
-        frontier = q.Queue()
+        frontier = CheckableQueue()
         frontier.put(self)
-        expanded = q.Queue()
+        expanded = CheckableQueue()
+        remainders = []
         while True:
             if frontier.empty():
-                self.beliefs = [] # failure case
-                return
+                remainders.append(BeliefBase()) # failure case
+                return remainders
             n = frontier.get()
-            print("=========Expanded:==========")
-            n.show_belief_base()
-            print("============================")
             expanded.put(n)
             if not n.entails(b.to_string()):
-                self.beliefs = n.beliefs
-                return
+                remainders.append(n)
             for belief_one_clause in n.beliefs:
                 n_copy = copy.deepcopy(n)
                 n_copy.del_belief(belief_one_clause)
-                frontier.put(n_copy)
+                if n_copy not in frontier and n_copy not in expanded:
+                    frontier.put(n_copy)
 
     def flatten(self):
         belief = []
@@ -442,8 +448,128 @@ class convert2CNF:
             idx += 1
         prop = "".join(prop)
         return prop
+    
 
-            
+
+    
+    
+    @staticmethod
+    def or_over_and(prop):
+        return convert2CNF.distribution(prop,OR,AND)
+    @staticmethod
+    def and_over_or(prop):
+        return convert2CNF.distribution(prop,AND,OR)
+    @staticmethod
+    def detect_distribution(prop, operator):
+        in_clause=0
+        for s in range(len(prop)):
+            if(in_clause <= 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
+                return True
+            elif(prop[s]=='('):
+                        in_clause+=1
+            elif(prop[s]==')'):
+                        in_clause-=1
+        return False
+    
+    @staticmethod
+    def distribution(prop , op1 , op2):
+        in_clause=0
+        left=''
+        right=''
+        output=prop
+        middlePart = prop
+        i_start=0
+        i_end =len(prop)
+        for s in range(len(prop)):
+            if in_clause <=1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='('):
+                #s: index of the OR sign in the prop-string
+                #divide sentence:
+                m=s-1
+                openPar=0
+                while(m>-1):#All characters up to thenext and sign are important
+                    if prop[m]==(AND) and openPar <=0:
+                        i_start=m
+                        break
+                    elif(prop[m]=='('):
+                        openPar-=1
+                    elif(prop[m]==')'):
+                        openPar+=1
+                    m-=1
+                m=s+1
+                openPar=0
+                while(m<len(prop)):#All characters up to thenext and sign are important
+                    if prop[m]==(AND) and openPar <=0:
+                        i_end=m
+                        break
+                    elif(prop[m]=='('):
+                        openPar+=1
+                    elif(prop[m]==')'):
+                        openPar-=1
+                    m+=1
+                #set substrubgs
+                if(i_start!=0):
+                    i_start+=1
+                left= prop[:i_start]
+                right= prop[i_end:]
+                middlePart = prop[i_start:i_end]
+                middlePart = middlePart.replace("(","")
+                middlePart = middlePart.replace(")","")
+                print(middlePart)
+                if(middlePart.find(op2)==-1):
+                    return left+'('+middlePart+')'+right
+                arguments = middlePart.split(op1,1)
+                leftPart = arguments[0].split(op2)
+                rightPart = arguments[1].split(op2)
+                new_middle_part = ["" for x in range(len(leftPart*len(rightPart)))]
+                i=0
+                for p_left in leftPart:
+                    for p_right in rightPart:
+                        new_middle_part[i]='('+p_left+op1+p_right+')'
+                        i+=1
+       #set together
+                output =""
+                for s in range(len(new_middle_part)):
+                   output+=new_middle_part[s]
+                   if s!=len(new_middle_part)-1:
+                       output+=op2
+                return left + '('+output+')'+right
+            elif prop[s]=='(':
+                in_clause+=1
+            elif (prop[s]==')'):
+                in_clause-=1
+        return prop
+        
+    
+    @staticmethod        
+    def isCnf(prop):
+        #This method checks wether the input string is already in CNF format or not
+        in_clause=0 # number of parenthesis
+        prop = prop[1:len(prop)-1]
+        if(prop.find(BICONDITIONAL)!=-1 or prop.find(IMPLIES)!=-1):
+            return False
+        for s in prop :
+            if(in_clause ==0 and s==OR ):
+                return False
+            if s=='(':
+                in_clause+=1
+            elif (s==')'):
+                in_clause-=1
+        else:
+            return True
+        
+    @staticmethod
+    def convert_to_cnf(prop):
+        while prop.find(BICONDITIONAL) != -1:
+            prop = convert2CNF.solveBiconditional(prop)
+        while prop.find(IMPLIES) != -1:
+            prop = convert2CNF.solveImplication(prop)
+        for c in range(len(prop)-1):
+            if prop[c] == NOT and prop[c+1] == "(":
+                prop = convert2CNF.deMorgan(prop, c)
+        while(convert2CNF.detect_distribution(prop,OR)):
+            prop = convert2CNF.or_over_and(prop)
+        return prop
+
 
 if __name__ == '__main__':
     b = BeliefBase()
@@ -478,20 +604,19 @@ if __name__ == '__main__':
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
     b_c = BeliefBase()
-    b1 = Belief("p^q^r")
-    b2 = Belief("p^q")
+    b1 = Belief("p")
+    b2 = Belief("q")
+    b3 = Belief("r")
+    b4 = Belief("p^q")
     b_c.add_belief(b1)
-
-    print("Before: ")
-    b_c.show_belief_base()
-    b_c.revision(b2)
-    print("Result of contraction:")
+    b_c.add_belief(b2)
+    b_c.add_belief(b3)
+    b_c.contract(b4)
     b_c.show_belief_base()
     
     
+    prop = "(m<->(n^p))"
     
-    prop = str(input("Please enter a sentence in propositional logic: "))
-    prop = "(" + prop + ")"
     
     while prop.find(BICONDITIONAL) != -1:
         print("Solve BICONDITIONAL:")
@@ -513,8 +638,21 @@ if __name__ == '__main__':
             print("Solve DEMORGAN:")
             prop = convert2CNF.deMorgan(prop, c)
             print("Transformed: " + prop)
-    #a^((p^q^t^s)<->r)
-    #~(p^q^t)
-    #a^(~((p^q)vb)vc)
+
+    while(convert2CNF.detect_distribution(prop,OR)):
+        prop = convert2CNF.or_over_and(prop)
+        print("Transformed: " + prop)
+    p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
+    p2= convert2CNF.convert_to_cnf("(p->r)")
+    p3= convert2CNF.convert_to_cnf("(p<->q)")
+    p4= convert2CNF.convert_to_cnf("rv(p->q)")
+    p5 = convert2CNF.convert_to_cnf(prop)
+    
+    print(p4)
+    
+    
+   
+    #a^((p^q)<->r)
+    #~(p^q)
+    #a^(~((p^q)vb)vc
     #(a^b)v(c^d)v(e->f)
-    #a^(~((p^q^t)vb)vc)
