@@ -32,6 +32,16 @@ class convert2CNF:
             print("Solve DISTRIBUTIONS:")
             prop = convert2CNF.or_over_and(prop)
             print("Transformed: " + prop)
+        prop = list(prop)
+        c = 0
+        while c < len(prop):
+            if prop[c] == NOT and prop[c+1] == NOT:
+                del prop[c]
+                del prop[c]
+            c += 1
+        prop = "".join(prop)
+            
+        return prop
             
 # =============================================================================
 #         p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
@@ -154,7 +164,7 @@ class convert2CNF:
                     prop[idx] = OR
                 elif prop[idx] == OR:
                     prop[idx] = AND
-                else:
+                elif prop[idx] != NOT:
                     prop.insert(idx, NOT)
                     idx += 1
             if openPar == -1:
