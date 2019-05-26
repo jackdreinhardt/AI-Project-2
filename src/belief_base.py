@@ -413,7 +413,7 @@ if __name__ == '__main__':
     
     
     prop = str(input("Please enter a sentence in propositional logic: "))
-    #prop = "(" + prop + ")"
+    prop = "(" + prop + ")"
     cnf = convert2CNF.CNF(prop)
     print(cnf)
 
