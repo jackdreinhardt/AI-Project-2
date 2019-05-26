@@ -411,10 +411,12 @@ if __name__ == '__main__':
     b_c.contract(b4)
     b_c.show_belief_base()
     
-    
-    prop = str(input("Please enter a sentence in propositional logic: "))
+    prop = "(rv((n^s)v(p^m^s)))"
+    #((~mvn)^(~mvp)))^((~nv~pvm))
+    #prop = str(input("Please enter a sentence in propositional logic: "))
     #prop = "(" + prop + ")"
-    cnf = convert2CNF.CNF(prop)
+    print(convert2CNF.or_over_and(prop))
+    
 
     #### Tests ####
     #a^((p^q)<->r)
