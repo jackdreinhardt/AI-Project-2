@@ -345,31 +345,29 @@ class convert2CNF:
     
     def divideSentence(prop, idx):
         op_position = idx
-        openPar = 0
+        openPar = 1
         if idx != -1:
             while idx >= 0:
                 idx -= 1
                 if prop[idx] == "(":
+                    openPar -= 1
                     if openPar == 0:
                         left = prop[0:idx]
                         middleStart = idx
                         break
-                    else:
-                        openPar -= 1
                 if prop[idx] == ")":
                     openPar += 1
                     
             idx = op_position
-            openPar = 0
+            openPar = 1
             while idx < len(prop)-1:
                 idx += 1
                 if prop[idx] == ")":
+                    openPar -= 1
                     if openPar == 0:
                         right = prop[idx+1:len(prop)]
                         middleEnd = idx
                         break
-                    else:
-                        openPar -= 1
                 if prop[idx] == "(":
                     openPar += 1
                     
@@ -380,6 +378,9 @@ class convert2CNF:
     def solveBiconditional(prop):
         idx = prop.find(BICONDITIONAL)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
+        print("left = " + left)
+        print("middlePart = " + middlePart)
+        print("right = " + right)
         middlePart = middlePart.split("<->")
         cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
         prop = str(left + cnf + right)
@@ -389,23 +390,46 @@ class convert2CNF:
     def solveImplication(prop):
         idx = prop.find(IMPLIES)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
+        print("left = " + left)
+        print("middlePart = " + middlePart)
+        print("right = " + right)
         middlePart = middlePart.split("->")
         cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
         prop = left + cnf + right
         return prop
             
-    def deMorgan(prop):
-        print(prop)
-        idx = prop.find(NOT)
-        if prop[idx+1] == "(":
-            left, middlePart, right = convert2CNF.divideSentence(prop, idx)
-            print(middlePart)
-# =============================================================================
-#             if operator == AND:
-#                 cnf = NOT + string1 + OR + NOT + string2
-#             elif operator == OR:
-#                 cnf = NOT + string1 + AND + NOT + string2
-# =============================================================================
+    def deMorgan(prop, c):
+        left, middlePart, right = convert2CNF.divideSentence(prop, c+1)
+        #middlePart = middlePart + ")"
+        print("left = " + left)
+        print("middlePart = " + middlePart)
+        print("right = " + right)
+        idx = 2
+        openPar = 0
+        #middlePartList = list(middlePart) 
+        while idx <= len(middlePart):
+            if middlePart[idx] == "(":
+                openPar += 1
+            elif middlePart[idx] == ")":
+                openPar -= 1
+            if openPar == 0:
+                if middlePart[idx] == AND:
+                    leftString = middlePart[2:idx]
+                    print("leftString: " + leftString)
+                    rightString = middlePart[idx+1:len(middlePart)]
+                    print("rightString: " + rightString)
+                    middlePart = NOT + leftString + OR + NOT + rightString
+                    break
+                elif middlePart[idx] == OR:
+                    leftString = middlePart[2:idx]
+                    print("leftString: " + leftString)
+                    rightString = middlePart[idx+1:len(middlePart)]
+                    print("rightString: " + rightString)
+                    middlePart = NOT + leftString + AND + NOT + rightString
+                    break
+            idx += 1
+        prop = left + "((" + middlePart + ")" + right
+        return prop
             
 
 if __name__ == '__main__':
@@ -457,11 +481,19 @@ if __name__ == '__main__':
     prop = "(" + prop + ")"
     
     while prop.find(BICONDITIONAL) != -1:
+        print("Solve BICONDITIONAL:")
         prop = convert2CNF.solveBiconditional(prop)
+        print("Transformed: " + prop)
     while prop.find(IMPLIES) != -1:
+        print("Solve IMPLICATION:")
         prop = convert2CNF.solveImplication(prop)
-    if prop.find(NOT) != -1:
-        prop = convert2CNF.deMorgan(prop)
-    print(prop)
+        print("Transformed: " + prop)
+    for c in range(len(prop)-1):
+        if prop[c] == NOT and prop[c+1] == "(":
+            print("Solve DEMORGAN")
+            prop = convert2CNF.deMorgan(prop, c)
+            print("Transformed: " + prop)
     #a^((p^q)<->r)
     #~(p^q)
+    #a^(~((p^q)vb)vc
+    #(a^b)v(c^d)v(e->f)
