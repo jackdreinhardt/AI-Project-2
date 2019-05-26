@@ -8,14 +8,15 @@ class convert2CNF:
         Specifically it resolves biconditionals (<->) and implications (->), 
         uses De Morgan's law and finally distributes or (v) over and (^) to derive the CNF
         '''
+        prop = "(" + prop + ")"
         while prop.find(BICONDITIONAL) != -1:
-            print("Solve BICONDITIONAL:")
+            # print("Solve BICONDITIONAL:")
             prop = convert2CNF.solveBiconditional(prop)
-            print("Transformed: " + prop)
+            # print("Transformed: " + prop)
         while prop.find(IMPLIES) != -1:
-            print("Solve IMPLICATION:")
+            # print("Solve IMPLICATION:")
             prop = convert2CNF.solveImplication(prop)
-            print("Transformed: " + prop)
+            # print("Transformed: " + prop)
 # =============================================================================
 #     for c in range(len(prop)-1):
 #         if prop[c] == NOT and prop[c+1] == "(":
@@ -25,13 +26,13 @@ class convert2CNF:
 # =============================================================================
         for c in range(len(prop)-1):
             if prop[c] == NOT and prop[c+1] == "(":
-                print("Solve DEMORGAN:")
+                # print("Solve DEMORGAN:")
                 prop = convert2CNF.deMorgan(prop, c)
-                print("Transformed: " + prop)
+                # print("Transformed: " + prop)
         while(convert2CNF.detect_distribution(prop,OR)):
-            print("Solve DISTRIBUTIONS:")
+            # print("Solve DISTRIBUTIONS:")
             prop = convert2CNF.or_over_and(prop)
-            print("Transformed: " + prop)
+            # print("Transformed: " + prop)
 
         return prop
 
