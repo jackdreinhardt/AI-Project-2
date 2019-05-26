@@ -425,7 +425,93 @@ class convert2CNF:
             idx += 1
         prop = left + "((" + middlePart + ")" + right
         return prop
-            
+    
+    @staticmethod
+    def distribution(prop,operator1,operator2)
+        
+    @staticmethod
+    def or_over_and(prop,operator1, operator2):
+        in_clause=0
+        left=''
+        right=''
+        output=prop
+        middlePart = prop
+        i_start=0
+        i_end =len(prop)
+        
+        for s in range(len(prop)):
+            if(in_clause ==1 and prop[s]==OR ):
+                #s: index of the OR sign in the prop-string
+                #divide sentence:
+                m=s
+                openPar=0
+                while(m>-1):#All characters up to thenext and sign are important
+                    if prop[m]==('^') and openPar ==0:
+                        i_start=m
+                        break
+                    elif(prop[m]=='('):
+                        openPar+=1
+                    elif(prop[m]==')'):
+                        openPar-=1
+                    m-=1
+                m=s
+                openPar=0
+                while(m<len(prop)):#All characters up to thenext and sign are important
+                    if prop[m]==('^') and openPar ==0:
+                        i_end=m
+                        break
+                    elif(prop[m]=='('):
+                        openPar+=1
+                    elif(prop[m]==')'):
+                        openPar-=1
+                    m+=1
+                
+                #set substrubgs
+                if(i_start!=0):
+                    i_start+=1
+                left= prop[:i_start]
+                right= prop[i_end:]
+                middlePart = prop[i_start:i_end]
+                middlePart = middlePart.replace("(","")
+                middlePart = middlePart.replace(")","")
+                print(middlePart)
+                arguments = middlePart.split('v',1)
+                leftPart = arguments[0].split('^')
+                rightPart = arguments[1].split('^')
+                new_middle_part = ["" for x in range(len(leftPart*len(rightPart)))]
+                i=0
+                for p_left in leftPart:
+                    for p_right in rightPart:
+                        new_middle_part[i]='('+p_left+'v'+p_right+')'
+                        i+=1
+       #set together
+                output =""
+                for s in range(len(new_middle_part)):
+                   output+=new_middle_part[s]
+                   if s!=len(new_middle_part)-1:
+                       output+='^'
+            elif prop[s]=='(':
+                in_clause+=1
+            elif (prop[s]==')'):
+                in_clause-=1
+        return left + output+right
+    
+    @staticmethod        
+    def isCnf(prop):
+        #This method checks wether the input string is already in CNF format or not
+        in_clause=0 # number of parenthesis
+        prop = prop[1:len(prop)-1]
+        if(prop.find(BICONDITIONAL)!=-1 or prop.find(IMPLIES)!=-1):
+            return False
+        for s in prop :
+            if(in_clause ==0 and s==OR ):
+                return False
+            if s=='(':
+                in_clause+=1
+            elif (s==')'):
+                in_clause-=1
+        else:
+            return True
 
 if __name__ == '__main__':
     b = BeliefBase()
@@ -472,8 +558,14 @@ if __name__ == '__main__':
     
     
     
-    prop = str(input("Please enter a sentence in propositional logic: "))
+    prop = "sv(m^n)"
     prop = "(" + prop + ")"
+    print('Distribution')
+    print(prop)
+    p = convert2CNF.or_over_and(prop)
+    print(p)
+    print(convert2CNF.isCnf(p))
+    
     
     while prop.find(BICONDITIONAL) != -1:
         print("Solve BICONDITIONAL:")
