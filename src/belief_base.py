@@ -2,9 +2,9 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
-from checkable_queue import CheckableQueue
-from globals import *
-from convert2CNF import convert2CNF
+from src.checkable_queue import CheckableQueue
+from src.globals import *
+from src.convert2CNF import convert2CNF
 from functools import total_ordering
 
 
@@ -411,6 +411,7 @@ if __name__ == '__main__':
     b_c.contract(b4)
     b_c.show_belief_base()
     
+
     prop = "(rv((n^s)v(p^m^s)))"
     #((~mvn)^(~mvp)))^((~nv~pvm))
     #prop = str(input("Please enter a sentence in propositional logic: "))
@@ -418,8 +419,15 @@ if __name__ == '__main__':
     print(convert2CNF.or_over_and(prop))
     
 
+    
+    prop = str(input("Please enter a sentence in propositional logic: "))
+    cnf = convert2CNF.CNF(prop)
+    print("cnf =", cnf)
+
+
     #### Tests ####
     #a^((p^q)<->r)
+    #((p->q)->r)->s
     #~(p^q)
     #a^(~((p^q)vb)vc
     #(a^b)v(c^d)v(e->f)
