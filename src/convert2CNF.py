@@ -3,6 +3,11 @@ from globals import *
 class convert2CNF:
     @staticmethod
     def CNF(prop):
+        '''
+        CNF() transforms a sentence that is in propositional logic into its canonic normal form (CNF)
+        Specifically it resolves biconditionals (<->) and implications (->), 
+        uses De Morgan's law and finally distributes or (v) over and (^) to derive the CNF
+        '''
         while prop.find(BICONDITIONAL) != -1:
             print("Solve BICONDITIONAL:")
             prop = convert2CNF.solveBiconditional(prop)
@@ -23,7 +28,6 @@ class convert2CNF:
                 print("Solve DEMORGAN:")
                 prop = convert2CNF.deMorgan(prop, c)
                 print("Transformed: " + prop)
-        
         while(convert2CNF.detect_distribution(prop,OR)):
             print("Solve DISTRIBUTIONS:")
             prop = convert2CNF.or_over_and(prop)
@@ -37,6 +41,12 @@ class convert2CNF:
 #         p5 = convert2CNF.convert_to_cnf(prop)
 # =============================================================================
     
+    '''
+    divideSentence() is used to resolve biconditionals and implications.
+    It splits the sentence in propositional logic into three parts.
+    The part that needs to be transformed to derive the CNF, 
+    and everything to the left and right to that part, that is not affected by the changes in this step.
+    '''
     @staticmethod
     def divideSentence(prop, idx):
         op_position = idx
@@ -69,6 +79,9 @@ class convert2CNF:
             middlePart = prop[middleStart+1:middleEnd]
         return left, middlePart, right
     
+    '''
+    Biconditionals (p<->q) become implications (p->q)^(q->p)
+    '''
     @staticmethod
     def solveBiconditional(prop):
         idx = prop.find(BICONDITIONAL)
@@ -78,6 +91,9 @@ class convert2CNF:
         prop = str(left + cnf + right)
         return prop
         
+    '''
+    Implications (p->q) become (~pvq)
+    '''
     @staticmethod
     def solveImplication(prop):
         idx = prop.find(IMPLIES)
@@ -120,6 +136,9 @@ class convert2CNF:
 #         return prop
 # =============================================================================
     
+    '''
+    De Morgans law transforms ~(p^q) into (~pv~q) (and other De Morgan rules)
+    '''
     @staticmethod
     def deMorgan(prop, idx):
         prop = list(prop)
