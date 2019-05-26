@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
-import queue as q
+from checkable_queue import CheckableQueue
 
 AND = '^'
 OR = 'v'
@@ -224,6 +224,13 @@ class BeliefBase:
     def __init__(self):
         self.beliefs = []
 
+    def __eq__(self, item):
+        for sb,ib in zip(self.beliefs, item.beliefs):
+            for sbc,ibc in zip(sb.clauses,ib.clauses):
+                if not Clause.equals(sbc, ibc):
+                    return False
+        return True
+
     def add_belief(self, b):
         self.beliefs.append(b)
 
@@ -276,17 +283,17 @@ class BeliefBase:
                             resolved_clauses.append((c1,c2))
         return False        
 
-    def contract(self, b):
 
-        # uses partial meet contraction to remove belief b from the belief base
-        return
-                
-   
+    def contract(self,b):
         '''
         Uses partial meet contraction to remove belief b from the belief base.
-        Flattens the clauses so that each belief contains one clause.
-        Does not return a value, changes self.belief to reflect the contraction of belief b
+        '''
+        return self.remainders(b)
 
+    def remainders(self, b):
+        '''
+        Returns all remainders when introducing belief b into the belief base.
+        Flattens the clauses so that each belief contains one clause
 
         "Backward Clause Selection" - Jacob
         frontier = initial belief base
@@ -294,26 +301,31 @@ class BeliefBase:
             if frontier empty then return the empty set
             choose belief base n from frontier
             remove belief base n from frontier
+            add belief base n to expanded
             if n does not entail b, then return solution
             for each belief m in belief base n
                 n' = copy of belief base n with m removed
-                add n' to frontier
+                if n' not in frontier and n' not in expanded
+                    add n' to frontier
         '''
         self.flatten()
-        frontier = q.Queue()
+        frontier = CheckableQueue()
         frontier.put(self)
+        expanded = CheckableQueue()
+        remainders = []
         while True:
             if frontier.empty():
-                self.beliefs = [] # failure case
-                return
+                remainders.append(BeliefBase()) # failure case
+                return remainders
             n = frontier.get()
+            expanded.put(n)
             if not n.entails(b.to_string()):
-                self.beliefs = n.beliefs
-                return
+                remainders.append(n)
             for belief_one_clause in n.beliefs:
                 n_copy = copy.deepcopy(n)
                 n_copy.del_belief(belief_one_clause)
-                frontier.put(n_copy)
+                if n_copy not in frontier and n_copy not in expanded:
+                    frontier.put(n_copy)
 
     def flatten(self):
         belief = []
@@ -429,16 +441,16 @@ if __name__ == '__main__':
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
     b_c = BeliefBase()
-    b1 = Belief("p^q^r")
-    b2 = Belief("p^q")
+    b1 = Belief("p")
+    b2 = Belief("q")
+    b3 = Belief("r")
+    b4 = Belief("p^q")
     b_c.add_belief(b1)
-
-    print("Before: ")
-    b_c.show_belief_base()
-    b_c.revision(b2)
-    print("Result of contraction:")
-    b_c.show_belief_base()
-    
+    b_c.add_belief(b2)
+    b_c.add_belief(b3)
+    for b in b_c.contract(b4):
+        b.show_belief_base()
+        print("==========")
     
     
     prop = str(input("Please enter a sentence in propositional logic: "))
