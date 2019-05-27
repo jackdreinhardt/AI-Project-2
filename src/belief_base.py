@@ -2,9 +2,9 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
-from checkable_queue import CheckableQueue
-from globals import *
-from convert2CNF import convert2CNF
+from src.checkable_queue import CheckableQueue
+from src.globals import *
+from src.convert2CNF import convert2CNF
 from functools import total_ordering
 
 
