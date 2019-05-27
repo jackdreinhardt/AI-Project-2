@@ -362,7 +362,7 @@ class BeliefBase:
                 belief.append(Belief(c.to_string()))
         self.beliefs = belief
 
-    def revision(self, b):
+    def revise(self, b):
         b_not = Belief(b.to_string(),negate=True)
         self.contract(b_not)
         self.add_belief(b)
@@ -401,14 +401,8 @@ if __name__ == '__main__':
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
     b_c = BeliefBase()
-    b1 = Belief("p")
-    b2 = Belief("~qvp")
-    b3 = Belief("r")
-    b4 = Belief("p^q")
+    b1 = Belief("word")
     b_c.add_belief(b1)
-    b_c.add_belief(b2)
-    b_c.add_belief(b3)
-    b_c.contract(b4)
     b_c.show_belief_base()
     
 
