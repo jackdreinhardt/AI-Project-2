@@ -1,4 +1,4 @@
-from src.globals import *
+from globals import *
 
 class convert2CNF:
     @staticmethod
@@ -30,24 +30,34 @@ class convert2CNF:
                 # print("Solve DEMORGAN:")
                 prop = convert2CNF.deMorgan(prop, c)
                 print("Transformed: " + prop)
-                c = 0
-            c += 1
 
-        while(convert2CNF.detect_distribution(prop,OR)):
-            # print("Solve DISTRIBUTIONS:")
-            prop = convert2CNF.or_over_and(prop)
-            # print("Transformed: " + prop)
-        prop = list(prop)
-        c = 0
-        while c < len(prop):
-            if prop[c] == NOT and prop[c+1] == NOT:
-                del prop[c]
-                del prop[c]
-                c = -1
-            c += 1
-        prop = "".join(prop)
-            
-        return prop
+        
+      
+        print("Solve DISTRIBUTIONS:")
+        prop = convert2CNF.or_over_and(prop)
+        print("Transformed: " + prop)
+        
+        
+#        c = 0
+#        c += 1
+#
+#        while(convert2CNF.detect_distribution(prop,OR)):
+#            # print("Solve DISTRIBUTIONS:")
+#            prop = convert2CNF.or_over_and(prop)
+#            # print("Transformed: " + prop)
+#        prop = list(prop)
+#        c = 0
+#        while c < len(prop):
+#            if prop[c] == NOT and prop[c+1] == NOT:
+#                del prop[c]
+#                del prop[c]
+#                c = -1
+#            c += 1
+#        prop = "".join(prop)
+#            
+#        return prop
+
+
             
 # =============================================================================
 #         p1= convert2CNF.convert_to_cnf("(p<->(q^r))")
@@ -191,89 +201,96 @@ class convert2CNF:
     
     @staticmethod
     def or_over_and(prop):
-        return convert2CNF.distribution(prop,OR,AND)
-    @staticmethod
-    def and_over_or(prop):
-        return convert2CNF.distribution(prop,AND,OR)
+        while(convert2CNF.detect_distribution(prop,OR)!=-1):
+            idx = convert2CNF.detect_distribution(prop,OR)
+            strings = convert2CNF.divide(prop,idx,OR)
+            prop = convert2CNF.distribution(strings[0],strings[1],strings[2],OR,AND)
+        return prop
+   
     @staticmethod
     def detect_distribution(prop, operator):
         in_clause=0
+        int_operator=[]
+        #add all distributions to array
         for s in range(len(prop)):
             if(in_clause <= 1 and prop[s] == operator and (prop[s-1]==')' or prop[s+1]=='(') ):
-                return True
-            elif(prop[s]=='('):
-                        in_clause+=1
-            elif(prop[s]==')'):
-                        in_clause-=1
-        return False
+                int_operator.append(s)
+        idx=-1
+        last=0
+        #find the distribution sign
+        for op in int_operator:
+            m=op-1
+            openPar=0
+            while(m>-1):#All characters up to thenext and sign are important
+                    if(prop[m]=='('):
+                        openPar+=1
+                    elif(prop[m]==')'):
+                        openPar-=1
+                    if openPar>last:
+                        idx=op
+                    m-=1
+            last=openPar
+        return idx
     
     @staticmethod
-    def distribution(prop , op1 , op2):
-        in_clause=0
-        left=''
-        right=''
-        output=prop
-        middlePart = prop
-        i_start=0
-        i_end =len(prop)
-        for s in range(len(prop)):
-            if in_clause <=1 and prop[s]==op1 and (prop[s-1]==')' or prop[s+1]=='('):
-                #s: index of the OR sign in the prop-string
-                #divide sentence:
-                m=s-1
-                openPar=0
-                while(m>-1):#All characters up to thenext and sign are important
-                    if prop[m]==(AND) and openPar <=0:
-                        i_start=m
-                        break
-                    elif(prop[m]=='('):
-                        openPar-=1
-                    elif(prop[m]==')'):
-                        openPar+=1
-                    m-=1
-                m=s+1
-                openPar=0
-                while(m<len(prop)):#All characters up to thenext and sign are important
-                    if prop[m]==(AND) and openPar <=0:
-                        i_end=m
-                        break
-                    elif(prop[m]=='('):
-                        openPar+=1
-                    elif(prop[m]==')'):
-                        openPar-=1
-                    m+=1
-                #set substrubgs
-                if(i_start!=0):
-                    i_start+=1
-                left= prop[:i_start]
-                right= prop[i_end:]
-                middlePart = prop[i_start:i_end]
-                middlePart = middlePart.replace("(","")
-                middlePart = middlePart.replace(")","")
-                #print(middlePart)
-                if(middlePart.find(op2)==-1):
-                    return left+'('+middlePart+')'+right
-                arguments = middlePart.split(op1,1)
-                leftPart = arguments[0].split(op2)
-                rightPart = arguments[1].split(op2)
-                new_middle_part = ["" for x in range(len(leftPart*len(rightPart)))]
-                i=0
-                for p_left in leftPart:
-                    for p_right in rightPart:
-                        new_middle_part[i]='('+p_left+op1+p_right+')'
-                        i+=1
-       #set together
-                output =""
-                for s in range(len(new_middle_part)):
-                   output+=new_middle_part[s]
-                   if s!=len(new_middle_part)-1:
-                       output+=op2
-                return left + '('+output+')'+right
-            elif prop[s]=='(':
-                in_clause+=1
-            elif (prop[s]==')'):
-                in_clause-=1
-        return prop
+    def divide(prop,index,operator):
+        i_start =0
+        i_end = len(prop)
+        m=index-1
+        openPar=0
+        while(m>-1):#All characters up to thenext and sign are important
+            if (prop[m]==(AND) or prop[m]=='(') and openPar <=0:
+                i_start=m
+                break
+            elif(prop[m]=='('):
+                openPar-=1
+            elif(prop[m]==')'):
+                openPar+=1
+            m-=1
+        m=index+1
+        openPar=0
+        while(m<len(prop)):#All characters up to thenext and sign are important
+            if (prop[m]==(AND) or prop[m] ==')') and openPar <=0:
+                i_end=m
+                break
+            elif(prop[m]=='('):
+                openPar+=1
+            elif(prop[m]==')'):
+                openPar-=1
+            m+=1
+        #set substrubgs
+        if prop[i_start]=='(':
+            i_start+=1
+        left= prop[:i_start]
+        right= prop[i_end:]
+        middlePart = prop[i_start:i_end]
+        return left,middlePart,right
+    
+    @staticmethod
+    def distribution(left,middlePart,right, op1 , op2):
+        output=''
+        middlePart = middlePart.replace("(","")
+        middlePart = middlePart.replace(")","")
+        #print(middlePart)
+        if(middlePart.find(op2)==-1):
+            return left+'('+middlePart+')'+right
+        arguments = middlePart.split(op1,1)
+        leftPart = arguments[0].split(op2)
+        rightPart = arguments[1].split(op2)
+        new_middle_part = ["" for x in range(len(leftPart*len(rightPart)))]
+        i=0
+        for p_left in leftPart:
+            for p_right in rightPart:
+                new_middle_part[i]='('+p_left+op1+p_right+')'
+                i+=1
+   #put together
+        for s in range(len(new_middle_part)):
+           output+=new_middle_part[s]
+           if s!=len(new_middle_part)-1:
+               output+=op2
+        return left + output+right
+            
+        
         
     
     @staticmethod        
