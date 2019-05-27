@@ -1,4 +1,4 @@
-from globals import *
+from src.globals import *
 
 class convert2CNF:
     @staticmethod

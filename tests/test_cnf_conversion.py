@@ -13,7 +13,7 @@ class CNFConversionTests(unittest.TestCase):
 
     def test_or_cnf(self):
         self.assertEqual(self.c.CNF(f"p{OR}q{OR}r"), f"(p{OR}q{OR}r)")
-        self.assertEqual(self.c.CNF(f"(p{OR}((q){OR}r)){OR}s"), f"(p{OR}q{OR}r{OR}s)")
+        self.assertEqual(self.c.CNF(f"(p{OR}((q){OR}r)){OR}s"), f"((p{OR}q{OR}r{OR}s))")
 
     def test_implies_cnf(self):
         self.assertEqual(self.c.CNF(f"p{IMPLIES}q"), f"({NOT}p{OR}q)")
