@@ -30,6 +30,19 @@ class convert2CNF:
                 # print("Solve DEMORGAN:")
                 prop = convert2CNF.deMorgan(prop, c)
                 print("Transformed: " + prop)
+                c = 0
+            c += 1
+        
+        prop = list(prop)
+        c = 0
+        while c < len(prop):
+            if prop[c] == NOT and prop[c+1] == NOT:
+                del prop[c]
+                del prop[c]
+                c = -1
+            c += 1
+        prop = "".join(prop)
+    
 
         
       
@@ -37,9 +50,7 @@ class convert2CNF:
         prop = convert2CNF.or_over_and(prop)
         print("Transformed: " + prop)
         
-        
-#        c = 0
-#        c += 1
+        return prop
 #
 #        while(convert2CNF.detect_distribution(prop,OR)):
 #            # print("Solve DISTRIBUTIONS:")
