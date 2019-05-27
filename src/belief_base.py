@@ -2,9 +2,9 @@ from __future__ import print_function
 from collections import deque
 import copy
 import time
-from src.checkable_queue import CheckableQueue
-from src.globals import *
-from src.convert2CNF import convert2CNF
+from checkable_queue import CheckableQueue
+from globals import *
+from convert2CNF import convert2CNF
 from functools import total_ordering
 
 
@@ -315,7 +315,7 @@ class BeliefBase:
         self.flatten()
         self.beliefs = self.remainders(b)[0].beliefs
         # self.show_belief_base()
-        self.beliefs.sort()
+        # self.beliefs.sort()
         # self.show_belief_base()
 
     def remainders(self, b):
