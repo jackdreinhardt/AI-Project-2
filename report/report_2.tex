@@ -44,6 +44,26 @@ check if two clauses are equal, negate a clause, and resolve two clauses.
 
 \subsection{Implementation - Converting to CNF}
 \label{subsec:implementation_cnf}
+As a pre step to later actions, like belief revision and partial meet contraction, we implemented a function that could turn propositional logic into its coresponding conjunctive normal form (CNF). A sentence in CNF consists of multiple clauses connected with AND ('$\wedge$') symbols. The order in which we turn propositional logic into CNF is as follows
+
+\begin{figure}[h]
+	\begin{align*}
+		&\text{Eliminate BICONDITIONALS}\ ('\leftrightarrow'): & p\leftrightarrow q &\equiv (p\rightarrow q) \wedge (q\rightarrow p) \\
+		&\text{Eliminate IMPLICATIONS}\ ('\rightarrow'): & p\rightarrow q &\equiv \sim p\vee q \\
+		&\text{Perform DE MORGAN}: & \sim(p\vee q) &\equiv (\sim p\wedge\sim q) \\
+		&						   & \sim(p\wedge q) &\equiv (\sim p\vee\sim q) \\					
+	\end{align*}
+	\caption{Steps to convert propositional logic into CNF}
+	\label{fig:cnf_rules}
+\end{figure}
+ 
+Finally, the OR ('$\vee$') symbols are distributed over the AND ('$\wedge$') symbols in order to derive the CNF. Each of the above steps are performed as many times, until there are no more instances of the decribed operators, or until a sentence in CNF is derived. This iterative approach ensures that the sentence will be transformed into CNF, independend of the number of propositional operators, or if it is in disjunctive normal form (DNF), or any other logical form.
+At this point, it is mentioned, that the use of parenthesis is important for the transforming algorithm to work properly, e.g $p\rightarrow q\rightarrow s$ might cause problems, while $(p\rightarrow q)\rightarrow s$ will result in the correct CNF. In other word, it needs to be ensured that each binary operator together with its two arguments is enclosed by parenthesis. By default, we insert parenthesis around the whole input in order to make the writing more convenient for the user, e.g $(p\rightarrow q)\leftrightarrow (s\wedge t)$ is a valid input.
+
+The input sentence in propositional logic is stored as a string. In the next steps the string is checked if it contains any BICONDITIONAL ('$\leftrightarrow$') or IMPLICATION ('$\rightarrow$') symbols. If it does the algorithm starts to eliminate them. It does that by dividing the sentence into three different parts, all stored in separate strings. The first part contains the binary operator together with its two arguments. The other two parts contain the rest of the original sentence that is not affected by the operator, to the left and and to the right, respectively. This is especially convenient, because the same function can be used for solving BICONDITIONALS and IMPLICATIONS. Finally the algorithm sets the three strings back together to one string, after eliminating the original operator and replacing it by its correct simplification shown in figure \ref{fig:cnf_rules}.
+The function that simplifies sentences using the De Morgan rules, works differently, since there is no operator that divides the two arguments that are affected by this operator. Also notice that De Morgan can be applied to multiple literals at the same time, eg. $\sim(p\wedge q\wedge t) \equiv (\sim p\vee\sim q\vee\sim t)$. First a given sentenced is checked if it contains any instances where a negation ('$\sim$') is directly followed by a parenthesis ('$($'). If this is the case, the de Morgan algorithm is applied to the sentence (notice that it is invalid to write single literals in parenthesis). The algorithm keeps track of the parenthesis that are used within the part that de Morgan is applied to, eg. $\sim((p\vee q)\wedge t) \equiv (\sim(p\vee q)\vee\sim t)$. Notice that in this case the de Morgan algorithm will be applied to the resulting sentence again.
+After all BICONDITIONALS and IMPLICATIONS, and instances where the de Morgan rule can be applied, are eliminated, it is checked if the sentence contains any double negations ('$\sim\sim$') that can be erased.
+Finally the OR symbols are distributed over the AND symboly to derive the final CNF.
 
 \subsection{Implementation - Converting CNF into Beliefs and Clauses}
 \label{subsec:implementation}

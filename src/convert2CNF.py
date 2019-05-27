@@ -4,7 +4,7 @@ class convert2CNF:
     @staticmethod
     def CNF(prop):
         '''
-        CNF() transforms a sentence that is in propositional logic into its canonic normal form (CNF)
+        CNF() transforms a sentence that is in propositional logic into its conjunctive normal form (CNF)
         Specifically it resolves biconditionals (<->) and implications (->), 
         uses De Morgan's law and finally distributes or (v) over and (^) to derive the CNF
         '''
@@ -29,6 +29,15 @@ class convert2CNF:
             if prop[c] == NOT and prop[c+1] == "(":
                 # print("Solve DEMORGAN:")
                 prop = convert2CNF.deMorgan(prop, c)
+                prop = list(prop)
+                c = 0
+                while c < len(prop):
+                    if prop[c] == NOT and prop[c+1] == NOT:
+                        del prop[c]
+                        del prop[c]
+                        c = -1
+                    c += 1
+                prop = "".join(prop)
                 print("Transformed: " + prop)
                 c = 0
             c += 1
@@ -43,8 +52,6 @@ class convert2CNF:
             c += 1
         prop = "".join(prop)
     
-
-        
       
         print("Solve DISTRIBUTIONS:")
         prop = convert2CNF.or_over_and(prop)
@@ -176,14 +183,24 @@ class convert2CNF:
     '''
     De Morgans law transforms ~(p^q) into (~pv~q) (and other De Morgan rules)
     '''
+    #~((p^q)vt)
     @staticmethod
     def deMorgan(prop, idx):
+        print(prop)
         prop = list(prop)
         del prop[idx]
-        openPar = -1
-        while idx <= len(prop):
+        del prop[idx]
+        print("".join(prop))
+        openPar = 0
+        if prop[idx] == "(":
+            prop.insert(idx, NOT)
+            idx += 1
+        while idx < len(prop):
+            print(prop[idx])
+            print("oP:", openPar)
             if prop[idx] == "(":
                 openPar += 1
+                #print(idx)
             elif prop[idx] == ")":
                 openPar -= 1
             elif openPar == 0:

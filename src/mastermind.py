@@ -44,9 +44,13 @@ def compareGuess(guess, solution):
             correct += 1
     return correctColor, correct
 
+def createBelief(correctColor, correct, guess):
+    beliefs = []
+    
+
 print("Choose from these colors: \nred (r), green (g), yellow (y), blue (b)")
 
-solution = list(input("Enter your secrect code (e.g.: gbyr): "))
+solution = list(input("Enter your secrect four digit code with unique colors (e.g.: gbyr): "))
 
 #build_belief_base()
 solutionCode = input2coding(solution)
@@ -55,3 +59,5 @@ guess = ["y","b","r","g"]
 guessCode = input2coding(guess)
 correctColor, correct = compareGuess(guess, solution)
 print(correctColor, correct)
+
+
