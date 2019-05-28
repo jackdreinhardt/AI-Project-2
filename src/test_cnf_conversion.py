@@ -3,7 +3,7 @@ from convert2CNF import convert2CNF
 from globals import *
 
 # Correct results of CNF conversion come from an online calculator
-class CNFConversionTests(unittest.TestCase):
+class TestCNFConversion(unittest.TestCase):
     def setUp(self):
         self.c = convert2CNF()
 
