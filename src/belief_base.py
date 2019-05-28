@@ -1,13 +1,8 @@
 from __future__ import print_function
-from collections import deque
 import copy
-import time
 from checkable_queue import CheckableQueue
-from globals import *
 from convert2CNF import convert2CNF
-from functools import total_ordering
-
-
+from globals import *
 
 class Clause:
     def __init__(self, c=""):
@@ -202,23 +197,6 @@ class Belief:
 
             for c in negated_clauses[0]:
                 self.clauses.append(c)
-
-    # not a legitimate ordering, working on a nontrivial implementation
-    def __lt__(self, item):
-        slen = 0; ilen = 0;
-        for s,i in zip(self.clauses,item.clauses):
-            slen += len(s.positives) + len(s.negatives)
-            ilen += len(i.positives) + len(i.negatives)
-        return slen < ilen
-
-    # not a legitimate ordering, working on a nontrivial implementation
-    def __eq__(self, item):
-        slen = 0; ilen = 0;
-        for s,i in zip(self.clauses,item.clauses):
-            slen += len(s.positives) + len(s.negatives)
-            ilen += len(i.positives) + len(i.negatives)
-        return slen == ilen
-
 
     def show(self):
         total_str = ''
