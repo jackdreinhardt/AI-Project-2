@@ -38,7 +38,7 @@ class convert2CNF:
                         c = -1
                     c += 1
                 prop = "".join(prop)
-                print("Transformed: " + prop)
+                # print("Transformed: " + prop)
                 c = 0
             c += 1
         
@@ -53,9 +53,9 @@ class convert2CNF:
         prop = "".join(prop)
     
       
-        print("Solve DISTRIBUTIONS:")
+        # print("Solve DISTRIBUTIONS:")
         prop = convert2CNF.or_over_and(prop)
-        print("Transformed: " + prop)
+        # print("Transformed: " + prop)
         
         return prop
 #
@@ -186,18 +186,18 @@ class convert2CNF:
     #~((p^q)vt)
     @staticmethod
     def deMorgan(prop, idx):
-        print(prop)
+        # print(prop)
         prop = list(prop)
         del prop[idx]
         del prop[idx]
-        print("".join(prop))
+        # print("".join(prop))
         openPar = 0
         if prop[idx] == "(":
             prop.insert(idx, NOT)
             idx += 1
         while idx < len(prop):
-            print(prop[idx])
-            print("oP:", openPar)
+            # print(prop[idx])
+            # print("oP:", openPar)
             if prop[idx] == "(":
                 openPar += 1
                 #print(idx)
