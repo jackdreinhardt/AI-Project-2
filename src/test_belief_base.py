@@ -59,5 +59,20 @@ class TestBeliefBase(unittest.TestCase):
         self.assertFalse(self.b.entails('(r^~p)'))
         # self.assertTrue(self.b.entails('p^q^r^(~rvp)')) # raises error due to remove function
 
+    def test_remainders(self):
+        self.b.add_belief(Belief('p'))
+        self.b.add_belief(Belief('q'))
+        r1 = BeliefBase()
+        r1.add_belief(Belief('p'))
+        r2 = BeliefBase()
+        r2.add_belief(Belief('q'))
+        r3 = BeliefBase()
+        # print([str(r) for r in [r1,r2,r3]])
+        # print([str(real) for real in self.b.remainders(Belief('p^q'))])
+        self.assertCountEqual(self.b.remainders(Belief('p^q')), [r1, r2, r3])
+        self.b.add_belief(Belief('~pvr'))
+        print([str(real) for real in self.b.remainders(Belief('~r'))])
+        self.assertCountEqual(self.b.remainders(Belief('~r')), [r1, r2, r3])
+
 if __name__ == '__main__':
     unittest.main()
