@@ -1,4 +1,4 @@
-from logic_machine import cnf,belief_base
+from belief_revision_engine import cnf,belief_base
 
 red = ["a","b","c","d"]
 green = ["e","f","g","h"]
