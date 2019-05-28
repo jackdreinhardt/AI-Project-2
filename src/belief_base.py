@@ -238,8 +238,10 @@ class Belief:
         return total_str
 
 class BeliefBase:
+    hashnum = 0
     def __init__(self):
         self.beliefs = []
+        BeliefBase.hashnum += 1
 
     def __eq__(self, item):
         if len(self.beliefs) == len(item.beliefs):
@@ -256,6 +258,10 @@ class BeliefBase:
 
     def __ne__(self, item):
         return not self.__eq__(item)
+
+    def __hash__(self):
+        return BeliefBase.hashnum
+
 
     def __str__(self):
         if len(self.beliefs) != 0:
@@ -395,11 +401,10 @@ class BeliefBase:
         remainders = []
         while True:
             if frontier.empty():
-                remainders.append(BeliefBase()) # failure case
                 return remainders
             n = frontier.get()
             expanded.put(n)
-            if not n.entails(b.to_string()):
+            if not n.entails(b.to_string()) and n not in remainders:
                 remainders.append(n)
             for belief in n.beliefs:
                 n_copy = copy.deepcopy(n)
