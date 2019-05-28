@@ -244,17 +244,17 @@ class BeliefBase:
         BeliefBase.hashnum += 1
 
     def __eq__(self, item):
-        if len(self.beliefs) == len(item.beliefs):
-            for sb,ib in zip(self.beliefs, item.beliefs):
-                if len(sb.clauses) == len(ib.clauses):
-                    for sbc,ibc in zip(sb.clauses,ib.clauses):
-                        if not Clause.equals(sbc, ibc):
-                            return False
-                else:
-                    return False
-            return True
-        else:
+        if len(item.beliefs) != len(self.beliefs):
             return False
+        for belief1 in self.beliefs:
+            match = False
+            for belief2 in item.beliefs:
+                if belief1 == belief2:
+                    match = True
+                    break
+            if match == False:
+                return False
+        return True
 
     def __ne__(self, item):
         return not self.__eq__(item)
@@ -290,6 +290,8 @@ class BeliefBase:
     def intersect(belief_bases):
         inter_b = BeliefBase()
         if len(belief_bases) > 0:
+            if len(belief_bases) == 1:
+                return belief_bases[0]
             start_b = belief_bases[0]
             for bb in belief_bases[1:]:
                 for belief1 in start_b.beliefs:
@@ -334,19 +336,18 @@ class BeliefBase:
 
 
     def contract(self, b, mode='partial-meet'):
+        remainders = self.remainders(b)
         if mode == 'partial-meet':
-            partial_meet_contract(b)
+            self.beliefs = self.partial_meet(remainders)
         elif mode == 'full-meet':
-            remainders = self.remainders(b)
-            self.beliefs = intersect(remainders).beliefs
+            self.beliefs = BeliefBase.intersect(remainders).beliefs
         elif mode == 'maxichoice':
-            self.remainders(b)[0].beliefs
+            self.beliefs = remainders[0].beliefs
         else:
             raise ValueError("Invalid mode argument")
 
-    def partial_meet_contract(self, b):
-        self.flatten()
-        # assign entrenchment values to beliefs before contraction
+    def selection(self):
+        # assign entrenchment values to beliefs
         for i in range(0,len(self.beliefs)):
             for j in range(i,len(self.beliefs)):
                 if i != j:
@@ -361,72 +362,54 @@ class BeliefBase:
         # square entrenchment value to put more value on deeper entrenchment
         for belief in self.beliefs:
             belief.entrenchment = belief.entrenchment**2
-            print
-        # generate all possible intersections from remainders
-        remainders = self.remainders(b)
-        intersections = []
+
+    def partial_meet(self, remainders):
+        self.selection()
+        candidates = []
         for length in range(0, len(remainders)):
             for subset in itertools.combinations(remainders, length):
-                intersections.append(self.intersect(subset))
+                candidates.append(BeliefBase.intersect(subset))
         def sum_entrenchment(i):
             ret = 0
             for b in i.beliefs:
                 ret += b.entrenchment
             return ret
-
         # return maximum entrenchment value intersection
-        self.beliefs = max(intersections, key=sum_entrenchment).beliefs
-
-
-
+        return max(candidates, key=sum_entrenchment).beliefs
 
     def remainders(self, b):
-        '''
-        Returns all remainders when introducing belief b into the belief base.
-        Flattens the clauses so that each belief contains one clause
+        '''Returns the inclusion maximal remainders when introducing belief b into the belief base.
 
-        "Backward Clause Selection" - Jacob
-        frontier = initial belief base
-        loop do
-            if frontier empty then return the empty set
-            choose belief base n from frontier
-            remove belief base n from frontier
-            add belief base n to expanded
-            if n does not entail b, then return solution
-            for each belief m in belief base n
-                n' = copy of belief base n with m removed
-                if n' not in frontier and n' not in expanded
-                    add n' to frontier
+        Backward Clause Selection - implemented using BFS
         '''
         frontier = CheckableQueue()
         frontier.put(self)
         expanded = CheckableQueue()
         remainders = []
+        inclusion_max = 0
         while True:
             if frontier.empty():
                 return remainders
             n = frontier.get()
             expanded.put(n)
             if not n.entails(b.to_string()) and n not in remainders:
-                remainders.append(n)
+                # ensure only maximal length remainders are returned
+                if inclusion_max > 0:
+                    if len(n.beliefs) == inclusion_max:
+                        remainders.append(n)
+                else:
+                    inclusion_max = len(n.beliefs)
+                    remainders.append(n)
             for belief in n.beliefs:
                 n_copy = copy.deepcopy(n)
                 n_copy.del_belief(belief)
-                if n_copy not in frontier and n_copy not in expanded:
+                if n_copy not in frontier and n_copy not in expanded and inclusion_max == 0:
                     frontier.put(n_copy)
 
-    def flatten(self):
-        belief = []
-        for b in self.beliefs:
-            for c in b.clauses:
-                belief.append(Belief(c.to_string()))
-        self.beliefs = belief
-
-    def revise(self, b):
+    def revise(self, b, mode='partial-meet'):
         b_not = Belief(b.to_string(),negate=True)
-        self.contract(b_not)
+        self.contract(b_not, mode)
         self.add_belief(b)
-
 
 if __name__ == '__main__':
     b = BeliefBase()
@@ -439,15 +422,7 @@ if __name__ == '__main__':
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
-    b1 = BeliefBase()
-    b1.add_belief(Belief("p^q"))
-    b1.partial_meet_contract(Belief("p"))
-    print(b1)
-
     prop = "(rv((n^s)v(p^m^s)))"
-    #((~mvn)^(~mvp)))^((~nv~pvm))
-    #prop = str(input("Please enter a sentence in propositional logic: "))
-    #prop = "(" + prop + ")"
     print(convert2CNF.or_over_and(prop))
 
     prop = str(input("Please enter a sentence in propositional logic: "))
