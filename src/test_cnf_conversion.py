@@ -2,6 +2,9 @@ import unittest
 from convert2CNF import convert2CNF
 from globals import *
 
+# to run the tests:
+# python -m unittest test_cnf_conversion.py -v
+
 # Correct results of CNF conversion come from an online calculator
 class TestCNFConversion(unittest.TestCase):
     def setUp(self):
