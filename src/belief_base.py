@@ -210,6 +210,9 @@ class Belief:
                     differences.remove(selfclause)
         return len(differences) == 0
 
+    def __ne__(self, item):
+        return not self.__eq__(item)
+
     def show(self):
         total_str = ''
         for c in self.clauses:
@@ -219,6 +222,14 @@ class Belief:
         print(total_str)
 
     def to_string(self):
+        total_str = ''
+        for c in self.clauses:
+            str = '(' + c.to_string() + ")^"
+            total_str += str
+        total_str = total_str[:len(total_str)-1]
+        return total_str
+
+    def __str__(self):
         total_str = ''
         for c in self.clauses:
             str = '(' + c.to_string() + ")^"
@@ -243,6 +254,9 @@ class BeliefBase:
         else:
             return False
 
+    def __ne__(self, item):
+        return not self.__eq__(item)
+
     def __str__(self):
         if len(self.beliefs) != 0:
             out = '{'
@@ -265,6 +279,18 @@ class BeliefBase:
 
     def clear_beliefs(self):
         self.beliefs = []
+
+    @staticmethod
+    def intersect(belief_bases):
+        inter_b = BeliefBase()
+        if len(belief_bases) > 0:
+            start_b = belief_bases[0]
+            for bb in belief_bases[1:]:
+                for belief1 in start_b.beliefs:
+                    for belief2 in bb.beliefs:
+                        if belief1 == belief2:
+                            inter_b.add_belief(belief1)
+        return inter_b
 
     def entails(self, belief):
         # belief is a string
@@ -298,12 +324,18 @@ class BeliefBase:
                             clause_added = True
                             all_clauses.append(result)
                             resolved_clauses.append((c1,c2))
-        return False        
+        return False
 
-
-    def contract(self, b, mode='partial'):
-        self.flatten()
-        self.beliefs = self.remainders(b)[0].beliefs
+    def contract(self, b, mode='partial-meet'):
+        if mode == 'partial-meet':
+            partial_meet_contract(b)
+        elif mode == 'full-meet':
+            remainders = self.remainders(b)
+            self.beliefs = intersect(remainders).beliefs
+        elif mode == 'maxichoice':
+            self.remainders(b)[0].beliefs
+        else:
+            raise ValueError("Invalid mode argument")
 
     def partial_meet_contract(self, b):
         self.flatten()
@@ -328,11 +360,7 @@ class BeliefBase:
         intersections = []
         for length in range(0, len(remainders)):
             for subset in itertools.combinations(remainders, length):
-                if len(subset) > 0:
-                    inter = subset[0]
-                    for s in range(1,len(subset)):
-                        inter = inter.intersect(subset[s])
-                    intersections.append(inter)
+                intersections.append(self.intersect(subset))
         def sum_entrenchment(i):
             ret = 0
             for b in i.beliefs:
@@ -341,16 +369,7 @@ class BeliefBase:
 
         # return maximum entrenchment value intersection
         self.beliefs = max(intersections, key=sum_entrenchment).beliefs
-            
-        
 
-    def intersect(self, b):
-        new_b = BeliefBase()
-        for selfb in self.beliefs:
-            for otherb in b.beliefs:
-                if selfb == otherb:
-                    new_b.add_belief(selfb)
-        return new_b
 
     def remainders(self, b):
         '''
@@ -370,7 +389,6 @@ class BeliefBase:
                 if n' not in frontier and n' not in expanded
                     add n' to frontier
         '''
-        self.flatten()
         frontier = CheckableQueue()
         frontier.put(self)
         expanded = CheckableQueue()
@@ -383,9 +401,9 @@ class BeliefBase:
             expanded.put(n)
             if not n.entails(b.to_string()):
                 remainders.append(n)
-            for belief_one_clause in n.beliefs:
+            for belief in n.beliefs:
                 n_copy = copy.deepcopy(n)
-                n_copy.del_belief(belief_one_clause)
+                n_copy.del_belief(belief)
                 if n_copy not in frontier and n_copy not in expanded:
                     frontier.put(n_copy)
 
