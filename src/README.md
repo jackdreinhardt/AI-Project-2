@@ -33,5 +33,6 @@ There is no main file to run for the belief revision engine. The belief revision
 - `b` - belief base `s` - propositional logic sentence `mode` - type of contraction (*'partial-meet'*, *'full-meet'*, *'maxichoice'*)
 - Revises `b` with `s`; remove all beliefs from `b` that entail not `s`, then expand `b` with `s`.
 
+These functions can be used to formulate all aspects of a belief revision engine. Our unit tests are included in the source code and can be run from the command line. The working directory must be `src/` and the command to run is `python -m unittest -v`.
 
 
