@@ -109,29 +109,29 @@ class Clause:
         c2_copy = Clause.copy(c2)
 
         # find and remove all complements
-        for c1_symbol in c1.positives:
-            for c2_symbol in c2.negatives:
+        for c1_symbol in c1_copy.positives:
+            for c2_symbol in c2_copy.negatives:
                 # if the symbols match, remove the symbols from c1 and c2
-                if c1_symbol == c2_symbol:
+                if c1_symbol == c2_symbol and c1_symbol in c1_copy.positives:
                     c1_copy.del_positive_symbol(c1_symbol)
                     c2_copy.del_negative_symbol(c2_symbol)
-        for c2_symbol in c2.positives:
-            for c1_symbol in c1.negatives:
+        for c2_symbol in c2_copy.positives:
+            for c1_symbol in c1_copy.negatives:
                 # if the symbols match, remove the symbols from c1 and c2
-                if c2_symbol == c1_symbol:
+                if c2_symbol == c1_symbol and c2_symbol in c2_copy.positives:
                     c1_copy.del_negative_symbol(c1_symbol)
                     c2_copy.del_positive_symbol(c2_symbol)
 
         # remove redundant symbols
-        for c1_symbol in c1.positives:
-            for c2_symbol in c2.positives:
+        for c1_symbol in c1_copy.positives:
+            for c2_symbol in c2_copy.positives:
                 # if the symbols match, remove the symbol from c2
-                if c1_symbol == c2_symbol:
+                if c1_symbol == c2_symbol and c1_symbol in c1_copy.positives:
                     c2_copy.del_positive_symbol(c2_symbol)
-        for c1_symbol in c1.negatives:
-            for c2_symbol in c2.negatives:
+        for c1_symbol in c1_copy.negatives:
+            for c2_symbol in c2_copy.negatives:
                 # if the symbols match, remove the symbol from c2
-                if c1_symbol == c2_symbol:
+                if c1_symbol == c2_symbol and c1_symbol in c1_copy.negatives:
                     c2_copy.del_negative_symbol(c2_symbol)
 
         resolvent = Clause.combine_clauses(c1_copy, c2_copy)
@@ -332,6 +332,7 @@ class BeliefBase:
                             resolved_clauses.append((c1,c2))
         return False
 
+
     def contract(self, b, mode='partial-meet'):
         if mode == 'partial-meet':
             partial_meet_contract(b)
@@ -375,6 +376,8 @@ class BeliefBase:
 
         # return maximum entrenchment value intersection
         self.beliefs = max(intersections, key=sum_entrenchment).beliefs
+
+
 
 
     def remainders(self, b):
@@ -427,32 +430,12 @@ class BeliefBase:
 
 if __name__ == '__main__':
     b = BeliefBase()
-    b1 = Belief("(avbv~cvd)^g")
-    b2 = Belief("(av~bvcvd)")
+    b1 = Belief("p^q^r")
     b.add_belief(b1)
-    b.add_belief(b2)
 
     print("Belief Base: {0}".format(b))
 
-    c1 = b1.clauses[0]
-    c2 = b1.clauses[1]
-
-    print("\nClauses: ")
-    for belief in b.beliefs:
-        for c in belief.clauses:
-            c.show()
-
-    eq = Clause.equals(c1, c2)
-    print("Are the clauses equal? " + str(eq))
-
-    print("\nResolvent of clause 1 and clause 2: ")
-    result = Clause.resolve(c1,c2)
-    result.show()
-
-    empty = result.isEmpty()
-    print("Is the resolvent empty? " + str(empty))
-
-    belief = "a^b"
+    belief = 'p^q^r^(~rvp)'
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
@@ -460,21 +443,16 @@ if __name__ == '__main__':
     b1.add_belief(Belief("p^q"))
     b1.partial_meet_contract(Belief("p"))
     print(b1)
-   
-    
 
     prop = "(rv((n^s)v(p^m^s)))"
     #((~mvn)^(~mvp)))^((~nv~pvm))
     #prop = str(input("Please enter a sentence in propositional logic: "))
     #prop = "(" + prop + ")"
     print(convert2CNF.or_over_and(prop))
-    
 
-    
     prop = str(input("Please enter a sentence in propositional logic: "))
     cnf = convert2CNF.CNF(prop)
     print("cnf =", cnf)
-
 
     #### Tests ####
     #a^((p^q)<->r)
