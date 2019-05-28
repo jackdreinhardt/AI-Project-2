@@ -26,11 +26,11 @@ There is no main file to run for the belief revision engine. The belief revision
 - Expand `b` with `s`. Does not remove contradictions. Returns None.
 
 #### **`contract(b, s, mode)`**
-- `b` - belief base `s` - propositional logic sentence `mode` - type of contraction ('partial-meet', 'full-meet', 'maxichoice')
+- `b` - belief base `s` - propositional logic sentence `mode` - type of contraction (*'partial-meet'*, *'full-meet'*, *'maxichoice'*)
 - Contract `s` from `b`; remove all beliefs from `b` that entail `s`. Returns None.
 
 #### **`revise(b, s, mode)`**
-- `b` - belief base `s` - propositional logic sentence `mode` - type of contraction ('partial-meet', 'full-meet', 'maxichoice')
+- `b` - belief base `s` - propositional logic sentence `mode` - type of contraction (*'partial-meet'*, *'full-meet'*, *'maxichoice'*)
 - Revises `b` with `s`; remove all beliefs from `b` that entail not `s`, then expand `b` with `s`.
 
 
