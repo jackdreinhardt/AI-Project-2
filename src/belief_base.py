@@ -1,5 +1,6 @@
 from __future__ import print_function
 import copy
+import itertools
 from checkable_queue import CheckableQueue
 from convert2CNF import convert2CNF
 from globals import *
@@ -143,6 +144,7 @@ class Belief:
         cnf = cnf.replace(" ", "")
         cnf = cnf.replace("~~", "") # eliminate any double negations
         self.clauses = []
+        self.entrenchment = 0
 
         if negate == False:
             idx = cnf.find(AND)
@@ -198,6 +200,16 @@ class Belief:
             for c in negated_clauses[0]:
                 self.clauses.append(c)
 
+    def __eq__(self, item):
+        if len(self.clauses) != len(item.clauses):
+            return False
+        differences = copy.copy(self.clauses)
+        for selfclause in self.clauses:
+            for itemclause in item.clauses:
+                if Clause.equals(selfclause,itemclause):
+                    differences.remove(selfclause)
+        return len(differences) == 0
+
     def show(self):
         total_str = ''
         for c in self.clauses:
@@ -217,7 +229,6 @@ class Belief:
 class BeliefBase:
     def __init__(self):
         self.beliefs = []
-        self.entrenchment = 0
 
     def __eq__(self, item):
         for sb,ib in zip(self.beliefs, item.beliefs):
@@ -225,6 +236,12 @@ class BeliefBase:
                 if not Clause.equals(sbc, ibc):
                     return False
         return True
+
+    def __str__(self):
+        out = '{'
+        for ele in self.beliefs:
+            out = out + ele.to_string() + ', '
+        return out[:len(out)-2] + '}'
 
     def add_belief(self, b):
         self.beliefs.append(b)
@@ -237,8 +254,6 @@ class BeliefBase:
                     same_belief = False
             if same_belief:
                 self.beliefs.remove(belief)
-
-            
 
     def show_belief_base(self):
         for ele in self.beliefs:
@@ -279,22 +294,56 @@ class BeliefBase:
         return False        
 
 
-    def contract(self, b):
-        '''
-        Implements partial meet contraction using the ordering defined in the belief class
-        This ordering satisfies the postulates for epistemic entrenchment.
-        
-        1. the belief base is flattened, so each belief contains one clause
-        2. the beliefs in the belief base are sorted and given a entrenchment rank
-            2.a. entrenchment rank increases with the square (cubed?) root,
-                 therefore, more entrenched beliefs are valued higher
-        3. maximize the entrenchment value (search problem?) of the intersected solutions
-        '''
+    def contract(self, b, mode='partial'):
         self.flatten()
         self.beliefs = self.remainders(b)[0].beliefs
-        # self.show_belief_base()
-        # self.beliefs.sort()
-        # self.show_belief_base()
+
+    def partial_meet_contract(self, b):
+        self.flatten()
+        # assign entrenchment values to beliefs before contraction
+        for i in range(0,len(self.beliefs)):
+            for j in range(i,len(self.beliefs)):
+                if i != j:
+                    bi = BeliefBase()
+                    bi.add_belief(self.beliefs[i])
+                    bj = BeliefBase()
+                    bj.add_belief(self.beliefs[j])
+                    if bi.entails(self.beliefs[j].to_string()):
+                        self.beliefs[j].entrenchment += 1
+                    if bj.entails(self.beliefs[i].to_string()):
+                        self.beliefs[i].entrenchment += 1
+        # square entrenchment value to put more value on deeper entrenchment
+        for belief in self.beliefs:
+            belief.entrenchment = belief.entrenchment**2
+            print
+        # generate all possible intersections from remainders
+        remainders = self.remainders(b)
+        intersections = []
+        for length in range(0, len(remainders)):
+            for subset in itertools.combinations(remainders, length):
+                if len(subset) > 0:
+                    inter = subset[0]
+                    for s in range(1,len(subset)):
+                        inter = inter.intersect(subset[s])
+                    intersections.append(inter)
+        def sum_entrenchment(i):
+            ret = 0
+            for b in i.beliefs:
+                ret += b.entrenchment
+            return ret
+
+        # return maximum entrenchment value intersection
+        self.beliefs = max(intersections, key=sum_entrenchment).beliefs
+            
+        
+
+    def intersect(self, b):
+        new_b = BeliefBase()
+        for selfb in self.beliefs:
+            for otherb in b.beliefs:
+                if selfb == otherb:
+                    new_b.add_belief(selfb)
+        return new_b
 
     def remainders(self, b):
         '''
@@ -378,10 +427,11 @@ if __name__ == '__main__':
     entails = b.entails(belief)
     print("\nDoes the KB ential " + belief + "? " + str(entails))
 
-    b_c = BeliefBase()
-    b1 = Belief("word")
-    b_c.add_belief(b1)
-    b_c.show_belief_base()
+    b1 = BeliefBase()
+    b1.add_belief(Belief("p^q"))
+    b1.partial_meet_contract(Belief("p"))
+    print(b1)
+   
     
 
     prop = "(rv((n^s)v(p^m^s)))"

@@ -2,8 +2,7 @@ from convert2CNF import convert2CNF
 from belief_base import BeliefBase,Belief
 
 def cnf(s):
-    '''
-    Takes in a string of propositional logic using the following symbols.
+    '''Takes in a string of propositional logic using the following symbols.
     AND = ^
     OR = v
     NOT = ~
