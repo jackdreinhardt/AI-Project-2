@@ -3,3 +3,6 @@
 *.toc
 *.DS_Store
 *.synctex.gz
+
+src/__pycache__
+*.pyc
