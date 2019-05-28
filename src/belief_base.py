@@ -231,17 +231,25 @@ class BeliefBase:
         self.beliefs = []
 
     def __eq__(self, item):
-        for sb,ib in zip(self.beliefs, item.beliefs):
-            for sbc,ibc in zip(sb.clauses,ib.clauses):
-                if not Clause.equals(sbc, ibc):
+        if len(self.beliefs) == len(item.beliefs):
+            for sb,ib in zip(self.beliefs, item.beliefs):
+                if len(sb.clauses) == len(ib.clauses):
+                    for sbc,ibc in zip(sb.clauses,ib.clauses):
+                        if not Clause.equals(sbc, ibc):
+                            return False
+                else:
                     return False
-        return True
+            return True
+        else:
+            return False
 
     def __str__(self):
-        out = '{'
-        for ele in self.beliefs:
-            out = out + ele.to_string() + ', '
-        return out[:len(out)-2] + '}'
+        if len(self.beliefs) != 0:
+            out = '{'
+            for ele in self.beliefs:
+                out = out + ele.to_string() + ', '
+            return out[:len(out)-2] + '}'
+        return '{}'
 
     def add_belief(self, b):
         self.beliefs.append(b)
@@ -255,9 +263,8 @@ class BeliefBase:
             if same_belief:
                 self.beliefs.remove(belief)
 
-    def show_belief_base(self):
-        for ele in self.beliefs:
-            ele.show()
+    def clear_beliefs(self):
+        self.beliefs = []
 
     def entails(self, belief):
         # belief is a string
@@ -402,8 +409,7 @@ if __name__ == '__main__':
     b.add_belief(b1)
     b.add_belief(b2)
 
-    print("Belief Base:")
-    b.show_belief_base()
+    print("Belief Base: {0}".format(b))
 
     c1 = b1.clauses[0]
     c2 = b1.clauses[1]
