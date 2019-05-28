@@ -2,8 +2,11 @@ import unittest
 from convert2CNF import convert2CNF
 from globals import *
 
+# to run the tests:
+# python -m unittest test_cnf_conversion.py -v
+
 # Correct results of CNF conversion come from an online calculator
-class CNFConversionTests(unittest.TestCase):
+class TestCNFConversion(unittest.TestCase):
     def setUp(self):
         self.c = convert2CNF()
 
@@ -18,8 +21,7 @@ class CNFConversionTests(unittest.TestCase):
     def test_implies_cnf(self):
         self.assertEqual(self.c.CNF(f"p{IMPLIES}q"), f"({NOT}p{OR}q)")
         self.assertEqual(self.c.CNF(f"(p{IMPLIES}q){IMPLIES}r"), f"((p{OR}r){AND}({NOT}q{OR}r))")
-        self.assertEqual(self.c.CNF(f"p{IMPLIES}q{IMPLIES}r"), f"({NOT}p{OR}{NOT}q{OR}r)")
-        self.assertEqual(self.c.CNF(f"p{IMPLIES}q{IMPLIES}r{IMPLIES}s"), f"({NOT}p{OR}{NOT}q{OR}{NOT}r{OR}s)")
+        self.assertEqual(self.c.CNF(f"(p{IMPLIES}q){IMPLIES}(r{IMPLIES}s)"), f"(p{OR}{NOT}r{OR}s){AND}({NOT}q{OR}{NOT}r{OR}s)")
 
     def test_biconditional_cnf(self):
         self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q"), f"({NOT}p{OR}q){AND}({NOT}q{OR}p)")
