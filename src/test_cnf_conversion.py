@@ -25,7 +25,7 @@ class TestCNFConversion(unittest.TestCase):
 
     def test_biconditional_cnf(self):
         self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q"), f"({NOT}p{OR}q){AND}({NOT}q{OR}p)")
-        self.assertEqual(self.c.CNF(f"p{BICONDITIONAL}q{BICONDITIONAL}r"), f"(({NOT}p{OR}q){AND}(p{OR}{NOT}q){AND}({NOT}q{OR}r){AND}(q{OR}{NOT}r))")
+        self.assertEqual(self.c.CNF(f"(p{BICONDITIONAL}q){BICONDITIONAL}r"), f"(({NOT}p{OR}q){AND}(p{OR}{NOT}q){AND}({NOT}q{OR}r){AND}(q{OR}{NOT}r))")
 
     def test_combinations_cnf(self):
         self.assertEqual(self.c.CNF(f"(p{IMPLIES}q){BICONDITIONAL}(r{IMPLIES}s)"), f"(p{OR}{NOT}r{OR}s){AND}({NOT}q{OR}{NOT}r{OR}s)")
