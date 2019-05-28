@@ -40,7 +40,6 @@ def expand(s, belief_base):
     Note: Does not revise the belief base, so there may be contradictions
     '''
     belief_base.add_belief(Belief(s))
-    return belief_base
 
 def contract(s, belief_base):
     '''Contract the sentence s from belief_base using partial meet contraction
@@ -49,7 +48,6 @@ def contract(s, belief_base):
     Returns a BeliefBase object containing the input sentence in cnf form
     '''
     belief_base.contract(Belief(s))
-    return belief_base
 
 def revise(s, belief_base):
     '''Add the sentence s to belief_base after contracting contradictions
@@ -58,7 +56,6 @@ def revise(s, belief_base):
     Returns a BeliefBase object that has been revised by s
     '''
     belief_base.revise(Belief(s))
-    return belief_base
 
 
 
