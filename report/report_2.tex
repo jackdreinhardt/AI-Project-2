@@ -1,8 +1,9 @@
 \documentclass[a4paper,10pt]{article}
-\usepackage{fullpage, amsfonts, amsmath, indentfirst, graphicx, natbib}
+\usepackage{fullpage, amsfonts, amsmath, indentfirst, graphicx, natbib, amssymb}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \bibliographystyle{apalike}
+\newcommand{\norm}[1]{\lvert #1 \rvert}
 
 
 \begin{document}
@@ -32,17 +33,9 @@ Project report on\\
 
 \section{Design and Implementation}
 \label{sec:design}
-The design of the belief base takes advantage of the object-oriented nature of the Python programming language. At the highest level, the contents of the
-belief base are stored in an instance of a class called BeliefBase. The BeliefBase class simply contains a list of beliefs along with methods for adding
-or removing beliefs, checking for logical entailment, performing partial meet contraction, and showing the current belief base. One level lower, the beliefs
-are represented as an instance of the class Belief. Each belief contains a list of clauses, which is initialized when the object is created, taking an input
-string in CNF with an option for negating the entire belief. The Belief class also contains methods to print the belief or to convert the belief to a string.
-At the lowest level is the Clause class, which stores a list of the positive propositional symbols and a list of the negative propositional symbols. These two
-lists are initialized when each Clause is created by parsing the string that is input. The methods in Clause include deleting symbols, checking if the clause
-is empty and printing or converting the clause to a string. The Clause class also implements static methods to combine clauses, create a copy of a clause,
-check if two clauses are equal, negate a clause, and resolve two clauses.
+The design of the belief base takes advantage of the object-oriented nature of the Python programming language. At the highest level, the contents of the belief base are stored in an instance of a class called BeliefBase. The BeliefBase class simply contains a list of beliefs along with methods for adding or removing beliefs, checking for logical entailment, performing partial meet contraction, and showing the current belief base. One level lower, the beliefs are represented as an instance of the class Belief. Each belief contains a list of clauses, which is initialized when the object is created, taking an input string in CNF with an option for negating the entire belief. The Belief class also contains methods to print the belief or to convert the belief to a string. At the lowest level is the Clause class, which stores a list of the positive propositional symbols and a list of the negative propositional symbols. These two lists are initialized when each Clause is created by parsing the string that is input. The methods in Clause include deleting symbols, checking if the clause is empty and printing or converting the clause to a string. The Clause class also implements static methods to combine clauses, create a copy of a clause, check if two clauses are equal, negate a clause, and resolve two clauses.
 
-\subsection{Implementation - Converting to CNF}
+\subsection{Converting to CNF}
 \label{subsec:implementation_cnf}
 As a pre step to later actions, like belief revision and partial meet contraction, we implemented a function that could turn propositional logic into its coresponding conjunctive normal form (CNF). A sentence in CNF consists of multiple clauses connected with AND ('$\wedge$') symbols. The order in which we turn propositional logic into CNF is as follows
 
@@ -58,39 +51,26 @@ As a pre step to later actions, like belief revision and partial meet contractio
 \end{figure}
  
 Finally, the OR ('$\vee$') symbols are distributed over the AND ('$\wedge$') symbols in order to derive the CNF. Each of the above steps are performed as many times, until there are no more instances of the decribed operators, or until a sentence in CNF is derived. This iterative approach ensures that the sentence will be transformed into CNF, independend of the number of propositional operators, or if it is in disjunctive normal form (DNF), or any other logical form.
+
 At this point, it is mentioned, that the use of parenthesis is important for the transforming algorithm to work properly, e.g $p\rightarrow q\rightarrow s$ might cause problems, while $(p\rightarrow q)\rightarrow s$ will result in the correct CNF. In other word, it needs to be ensured that each binary operator together with its two arguments is enclosed by parenthesis. By default, we insert parenthesis around the whole input in order to make the writing more convenient for the user, e.g $(p\rightarrow q)\leftrightarrow (s\wedge t)$ is a valid input.
 
 The input sentence in propositional logic is stored as a string. In the next steps the string is checked if it contains any BICONDITIONAL ('$\leftrightarrow$') or IMPLICATION ('$\rightarrow$') symbols. If it does the algorithm starts to eliminate them. It does that by dividing the sentence into three different parts, all stored in separate strings. The first part contains the binary operator together with its two arguments. The other two parts contain the rest of the original sentence that is not affected by the operator, to the left and and to the right, respectively. This is especially convenient, because the same function can be used for solving BICONDITIONALS and IMPLICATIONS. Finally the algorithm sets the three strings back together to one string, after eliminating the original operator and replacing it by its correct simplification shown in figure \ref{fig:cnf_rules}.
-The function that simplifies sentences using the De Morgan rules, works differently, since there is no operator that divides the two arguments that are affected by this operator. Also notice that De Morgan can be applied to multiple literals at the same time, eg. $\sim(p\wedge q\wedge t) \equiv (\sim p\vee\sim q\vee\sim t)$. First a given sentenced is checked if it contains any instances where a negation ('$\sim$') is directly followed by a parenthesis ('$($'). If this is the case, the de Morgan algorithm is applied to the sentence (notice that it is invalid to write single literals in parenthesis). The algorithm keeps track of the parenthesis that are used within the part that de Morgan is applied to, eg. $\sim((p\vee q)\wedge t) \equiv (\sim(p\vee q)\vee\sim t)$. Notice that in this case the de Morgan algorithm will be applied to the resulting sentence again.
-After all BICONDITIONALS and IMPLICATIONS, and instances where the de Morgan rule can be applied, are eliminated, it is checked if the sentence contains any double negations ('$\sim\sim$') that can be erased.
-Finally the OR symbols are distributed over the AND symboly to derive the final CNF.
 
-\subsection{Implementation - Converting CNF into Beliefs and Clauses}
+The function that simplifies sentences using the De Morgan rules, works differently, since there is no operator that divides the two arguments that are affected by this operator. Also notice that De Morgan can be applied to multiple literals at the same time, eg. $\sim(p\wedge q\wedge t) \equiv (\sim p\vee\sim q\vee\sim t)$. First a given sentenced is checked if it contains any instances where a negation ('$\sim$') is directly followed by a parenthesis ('$($'). If this is the case, the de Morgan algorithm is applied to the sentence (notice that it is invalid to write single literals in parenthesis). The algorithm keeps track of the parenthesis that are used within the part that de Morgan is applied to, eg. $\sim((p\vee q)\wedge t) \equiv (\sim(p\vee q)\vee\sim t)$. Notice that in this case the de Morgan algorithm will be applied to the resulting sentence again. After all BICONDITIONALS and IMPLICATIONS, and instances where the de Morgan rule can be applied, are eliminated, it is checked if the sentence contains any double negations ('$\sim\sim$') that can be erased. Finally the OR symbols are distributed over the AND symboly to derive the final CNF.
+
+\subsection{Converting CNF into Beliefs and Clauses}
 \label{subsec:implementation}
-Once the input string is converted into CNF, the string is converted into a list of clauses, which is stored in a belief. Each AND ('$\wedge$') symbol marks the end of
-a clause when in CNF; any spaces, double negations, and parenthesis are removed from the string before it is used to initialize a new clause object. The
-initialization of each clause then removes all OR ('$\vee$') symbols and adds each propositional symbol to either the positive symbol list or the negative symbol list
-(symbols that are negated).
+Once the input string is converted into CNF, the string is converted into a list of clauses, which is stored in a belief. Each AND ('$\wedge$') symbol marks the end of a clause when in CNF; any spaces, double negations, and parenthesis are removed from the string before it is used to initialize a new clause object. The initialization of each clause then removes all OR ('$\vee$') symbols and adds each propositional symbol to either the positive symbol list or the negative symbol list (symbols that are negated).
 
 \subsection{Assumptions}
 \label{subsec:assumptions}
-The design and implementation of the belief base makes one important assumption: that each propositional logic symbol is a single character. This was a
-design choice for robustly implementing the parsing of string and converting the strings into beliefs and clauses.
+The design and implementation of the belief base makes one important assumption: that each propositional logic symbol is a single character. This was a design choice for robustly implementing the parsing of string and converting the strings into beliefs and clauses.
 
 \section{Logical Entailment}
 \label{sec:entail}
-A resolution-based approach was used to check for logical entailment in the belief base. Once a belief base has been initialized and beliefs have been added
-to it, logical entailment can be checked of an input belief in string form. First, the input string is converted into its negation as a belief object as described
-in section \ref{subsec:negation}. Then, all of the clauses in the belief base and the clauses of the input belief are stored in a single list to iterate over. The
-resolution algorithm loops over pairs of clauses, resolves these clauses, and then checks if the resolvent is either empty or already in the list of clauses.
-The implementation of the resolution algorithms is further explained in section \ref{subsec:resolution}. If two clauses resolve to an empty clause,
-then the method returns true, indicating that the input belief is entailed by the belief base. Otherwise, if the list of clauses has been exhausted and no further
-clauses can be added through resolution, then the loop terminates and the method returns false, indicating that the input belief is not entailed by the belief
-base. \\
+A resolution-based approach was used to check for logical entailment in the belief base. Once a belief base has been initialized and beliefs have been added to it, logical entailment can be checked of an input belief in string form. First, the input string is converted into its negation as a belief object as described in section \ref{subsec:negation}. Then, all of the clauses in the belief base and the clauses of the input belief are stored in a single list to iterate over. The resolution algorithm loops over pairs of clauses, resolves these clauses, and then checks if the resolvent is either empty or already in the list of clauses. The implementation of the resolution algorithms is further explained in section \ref{subsec:resolution}. If two clauses resolve to an empty clause, then the method returns true, indicating that the input belief is entailed by the belief base. Otherwise, if the list of clauses has been exhausted and no further clauses can be added through resolution, then the loop terminates and the method returns false, indicating that the input belief is not entailed by the belief base.
 
-A list containing all pairs of clauses that have already been resolved was added to improve the efficiency of the resolution algorithm. Each time the algorithm
-iterates over a pair of clauses, it checks that the clauses are not equal (not the same clause) and that the pair of clauses is not in the list of previously
-resolved clauses. \\
+A list containing all pairs of clauses that have already been resolved was added to improve the efficiency of the resolution algorithm. Each time the algorithm iterates over a pair of clauses, it checks that the clauses are not equal (not the same clause) and that the pair of clauses is not in the list of previously resolved clauses.
 
 \subsection{Resolution}
 \label{subsec:resolution}
@@ -106,10 +86,47 @@ then yields the negated belief in CNF, which can be used to check for logical en
 
 \section{Revision}
 \label{sec:revision}
+Revising a belief base with $\varphi$ involves contracting $\neg\varphi$ from the belief base and an expansion of $\varphi$ into the belief base. This follows from Levi's Identity:
+\[B * \varphi := (B \div \neg \varphi) + \varphi\] 
+This is precisely the method used in the implementation of revision. If contraction and expansion are implemented correctly, revision follows with little to no effort. Expansion simply involves adding a belief to the belief base without care for potential contradictions in the belief base. In other words, $\varphi$ is added to belief base $B$ giving a new belief base $B'$. Appending another belief to the internal belief list of the belief base solves this problem. Contraction is more involved and explained in the coming sections. 
 
-
-\subsection{Partial Meet Contraction}
+\subsection{Contraction}
 \label{subsec:contraction}
+Contraction is defined as removing $\varphi$ from the belief base $B$ giving a new belief base $B'$. After contraction, $\varphi$ must not be entailed by the belief base. This is where remainder sets become useful. They are defined as the set of inclusion-maximal subsets of $B$ that do not entail $\varphi$ and are denoted $B \bot\varphi$. The contraction could be any one of these remainders, but there are a few different methods for choosing which remainder set to return. These methods are detailed after a discussion on how the belief revision engine calculates inclusion-maximal remainder sets.
+
+\subsubsection{Remainder sets}
+\label{subsubsec:remainders}
+The belief revision engine calculates remainder sets using a variation of Breadth First Search - Backwards Clause Selection. It is similar to Backwards Feature Selection in machine learning contexts. When calculating remainder sets for $B \bot\varphi$ the algorithm removes a belief from the $B$ and checks if the resulting belief base entails $\varphi$. It checks all possible remainders of size $\norm{B}-1$, then all possible remainders of $\norm{B}-2$, down to the empty remainder set $\varnothing$. Formally, the search problem is defined as follows:
+\begin{table}[!htb]
+\centering
+\begin{tabular}{rl}
+$s_o$ & initial state \\
+$ACTIONS(s)$ & from a belief base $s$, removing each belief \\
+$RESULTS(s, a)$ & resulting belief base after removing a belief \\
+$GOAL-TEST(s)$ & test if $s$ entails $\varphi$ \\
+$STEP-COST(s,a)$ & step cost is 1 \\
+\end{tabular}
+\end{table}
+
+An example of the search algorithm on a belief base is shown in Figure \ref{fig:BFS}. Now that the remainder sets are calculated, the different methods for completing contraction can be explained.
+\begin{figure}[!htb]
+\centering
+% \includegraphics[width=0.45\linewidth]{figures/img1.PNG}
+\caption{Example of BFS on the remainder set problem $B \bot\varphi$ where $B = \{p,q,r\}$, and $\varphi = \{p \wedge q\}$}
+\label{fig:BFS}
+\end{figure}
+
+\subsubsection{Maxichoice Contraction}
+\label{sec:maxichoice}
+The simplest method to choose remainders is using Maxichoice contraction. This method involves picking a random remainder and returning it. The belief revision engine always returns the first remainder calculated by the Backward Clause Selection algorithm. This method is not the best, as it does not take into account any other remainder.
+
+\subsubsection{Full-Meet Contraction}
+\label{sec:fullmeet}
+Another simple method to choose remainders is to take the intersection of all remainder sets. If $R$ is the set of remainders, contraction returns $\bigcap\limits_{i=1}^{\norm{R}} R_i$. The belief revision engine does just this, and intersects all remainders calculated by the Backwards Clause Selection algorithm. This is also not an ideal solution, as the result of contraction is much too small to be useful.
+
+\subsubsection{Partial-Meet Contraction}
+\label{sec:partialmeet}
+A more complex method to choose remainders is to take the intersection of \textit{some} of the remainder sets.
 
 
 \section{What We've Learned}
