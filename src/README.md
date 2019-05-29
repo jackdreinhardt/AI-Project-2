@@ -6,7 +6,11 @@
 
 ## Running the Program
 
-There is no main file to run for the belief revision engine. The belief revision engine is primarily a module to import using either a python script or the python interpreter. An example file has been provided -  `example.py` - demonstrating the proper use of the module's functions. Only functions included in `belief_revision_engine.py` should be used; internal functions of any classes are not intended to be accessed by the user. There are comments at the beginning of each function detailing their behavior. The functions are restated for redundancy here.
+There is no main funciton that runs our belief revision engine. The belief revision engine is primarily a module to import using either a python script or the python interpreter. The module should be imported as follows:
+
+`from belief_revision_engine import cnf,belief_base,entails,expand,contract,revise`
+
+An example file has been provided -  `example.py` - demonstrating the proper use of the module's functions. Only functions included in `belief_revision_engine.py` should be used; internal functions of any classes are not intended to be accessed by the user. There are comments at the beginning of each function detailing their behavior. The functions are restated for redundancy here.
 
 ### Functions
 #### **`cnf(s)`**
