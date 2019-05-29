@@ -137,7 +137,7 @@ class Belief:
         cnf = cnf.replace(" ", "")
         cnf = cnf.replace("~~", "") # eliminate any double negations
         self.clauses = []
-        self.entrenchment = 0
+        self.entrenchment = 1
 
         if negate == False:
             idx = cnf.find(AND)
@@ -334,14 +334,30 @@ class BeliefBase:
                         self.beliefs[j].entrenchment += 1
                     if bj.entails(str(self.beliefs[i])):
                         self.beliefs[i].entrenchment += 1
+                    if bi.contained_by(self.beliefs[j]):
+                        self.beliefs[j].entrenchment += 1
+                    if bj.contained_by(self.beliefs[i]):
+                        self.beliefs[i].entrenchment += 1
         # square entrenchment value to put more value on deeper entrenchment
         for belief in self.beliefs:
             belief.entrenchment = belief.entrenchment**2
 
+
+    # returns true if self = p and belief = p^q, false otherwise
+    # designed to be called when self has one belief
+    def contained_by(self, belief):
+        count = len(self.beliefs[0].clauses)
+        for c in belief.clauses:
+            if c in self.beliefs[0].clauses:
+                count -= 1
+        if count == 0:
+            return True
+        return False
+
     def partial_meet(self, remainders):
         self.selection()
         candidates = []
-        for length in range(0, len(remainders)):
+        for length in range(0, len(remainders)+1):
             for subset in itertools.combinations(remainders, length):
                 candidates.append(BeliefBase.intersect(subset))
         def sum_entrenchment(i):
