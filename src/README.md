@@ -13,9 +13,6 @@ There is no main funciton that runs our belief revision engine. The belief revis
 An example file has been provided -  `example.py` - demonstrating the proper use of the module's functions. Only functions included in `belief_revision_engine.py` should be used; internal functions of any classes are not intended to be accessed by the user. There are comments at the beginning of each function detailing their behavior. The functions are restated for redundancy here.
 
 ### Functions
-#### **`cnf(s)`**
-- `s` - propositional logic sentence
-- Converts a propositional sentence to Conjunctive Normal Form.
 
 #### **`belief_base(s)`**
 - `s` (optional) - propositional logic sentence in cnf
@@ -37,9 +34,7 @@ An example file has been provided -  `example.py` - demonstrating the proper use
 - `b` - belief base `s` - propositional logic sentence in cnf `mode` - type of contraction (*'partial-meet'* (default), *'full-meet'*, *'maxichoice'*)
 - Revises `b` with `s`; remove all beliefs from `b` that entail not `s`, then expand `b` with `s`.
 
-These functions can be used to formulate all aspects of a belief revision engine. Our unit tests are included in the source code and can be run from the command line. The working directory must be `src/` and the command to run is `python -m unittest -v`.
-
-If at any point the belief base needs to be displayed to the command line, python's default `print` function is used. Additionally, the BeliefBase class plays nice with the `==` and `!=` operator for easy comparison.
+These functions can be used to formulate all aspects of a belief revision engine. If at any point the belief base needs to be displayed to the command line, python's default `print` function is used. Additionally, the BeliefBase class plays nice with the `==` and `!=` operator for easy comparison.
 
 ### Propositional Logic Symbols
 We used the following symbols to represent propositional logic in our implementation of a belief revision engine:
