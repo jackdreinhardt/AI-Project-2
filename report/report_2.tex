@@ -29,7 +29,11 @@ Project report on\\
 
 \section{Introduction}
 \label{sec:intro}
-Introduction in which you describe the problem of belief revision in general terms and then describe your specific approach.
+Belief revision is a necessary component of any artificially intelligent system that plans to adapt its knowledge as new inputs come in. AGM belief revision theory
+consists of three methods of adapting a belief base: expansion (+), contraction (/) and revision (*). Levi's identity shows how to build a general algorithm for revision
+using only expansion and contraction since $B*p=(B/p)+p$. In this report, the method of partial meet contraction will be described in detail in section \ref{sec:revision}.
+The belief base will check for logical entailment of beliefs with a resolution-based method as described in section \ref{sec:entail}, which is utilized when performing
+belief contraction. Specific implementation details will be described throughout the report.
 
 \section{Design and Implementation}
 \label{sec:design}
@@ -44,12 +48,12 @@ As a pre step to later actions, like belief revision and partial meet contractio
 		&\text{Eliminate BICONDITIONALS}\ ('\leftrightarrow'): & p\leftrightarrow q &\equiv (p\rightarrow q) \wedge (q\rightarrow p) \\
 		&\text{Eliminate IMPLICATIONS}\ ('\rightarrow'): & p\rightarrow q &\equiv \sim p\vee q \\
 		&\text{Perform DE MORGAN}: & \sim(p\vee q) &\equiv (\sim p\wedge\sim q) \\
-		&						   & \sim(p\wedge q) &\equiv (\sim p\vee\sim q) \\					
+		&						   & \sim(p\wedge q) &\equiv (\sim p\vee\sim q) \\
 	\end{align*}
 	\caption{Steps to convert propositional logic into CNF}
 	\label{fig:cnf_rules}
 \end{figure}
- 
+
 Finally, the OR ('$\vee$') symbols are distributed over the AND ('$\wedge$') symbols in order to derive the CNF. Each of the above steps are performed as many times, until there are no more instances of the decribed operators, or until a sentence in CNF is derived. This iterative approach ensures that the sentence will be transformed into CNF, independend of the number of propositional operators, or if it is in disjunctive normal form (DNF), or any other logical form.
 
 At this point, it is mentioned, that the use of parenthesis is important for the transforming algorithm to work properly, e.g $p\rightarrow q\rightarrow s$ might cause problems, while $(p\rightarrow q)\rightarrow s$ will result in the correct CNF. In other word, it needs to be ensured that each binary operator together with its two arguments is enclosed by parenthesis. By default, we insert parenthesis around the whole input in order to make the writing more convenient for the user, e.g $(p\rightarrow q)\leftrightarrow (s\wedge t)$ is a valid input.
@@ -87,14 +91,14 @@ then yields the negated belief in CNF, which can be used to check for logical en
 \section{Revision}
 \label{sec:revision}
 Revising a belief base with $\varphi$ involves contracting $\neg\varphi$ from the belief base and an expansion of $\varphi$ into the belief base. This follows from Levi's Identity:
-\[B * \varphi := (B \div \neg \varphi) + \varphi\] 
-This is precisely the method used in the implementation of revision. If contraction and expansion are implemented correctly, revision follows with little to no effort. Expansion simply involves adding a belief to the belief base without care for potential contradictions in the belief base. In other words, $\varphi$ is added to belief base $B$ giving a new belief base $B'$. Appending another belief to the internal belief list of the belief base solves this problem. Contraction is more involved and explained in the coming sections. 
+\[B * \varphi := (B \div \neg \varphi) + \varphi\]
+This is precisely the method used in the implementation of revision. If contraction and expansion are implemented correctly, revision follows with little to no effort. Expansion simply involves adding a belief to the belief base without care for potential contradictions in the belief base. In other words, $\varphi$ is added to belief base $B$ giving a new belief base $B'$. Appending another belief to the internal belief list of the belief base solves this problem. Contraction is more involved and explained in the coming sections.
 
 \subsection{Contraction}
 \label{subsec:contraction}
 Contraction is defined as removing $\varphi$ from the belief base $B$ giving a new belief base $B'$. After contraction, $\varphi$ must not be entailed by the belief base. This is where remainder sets become useful. They are defined as the set of inclusion-maximal subsets of $B$ that do not entail $\varphi$ and are denoted $B \bot\varphi$. The contraction could be any one of these remainders, but there are a few different methods for choosing which remainder set to return. These methods are detailed after a discussion on how the belief revision engine calculates inclusion-maximal remainder sets.
 
-\subsubsection{Remainder sets}
+\subsubsection{Remainder Sets}
 \label{subsubsec:remainders}
 The belief revision engine calculates remainder sets using a variation of Breadth First Search - Backwards Clause Selection. It is similar to Backwards Feature Selection in machine learning contexts. When calculating remainder sets for $B \bot\varphi$ the algorithm removes a belief from the $B$ and checks if the resulting belief base entails $\varphi$. It checks all possible remainders of size $\norm{B}-1$, then all possible remainders of $\norm{B}-2$, down to the empty remainder set $\varnothing$. Formally, the search problem is defined as follows:
 \begin{table}[!htb]
@@ -148,7 +152,10 @@ Now that the belief revision engine has the capability to perform contraction of
 
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
-
+The algorithms described in this report ultimately give the AI agent the ability to add new beliefs to its belief base, remove contradictory beliefs, and check whether
+a belief is entailed by the belief base. The AI agent, however, only works with propositional logic sentences. Future work on this AI agent could include applying the
+belief revision to a specific purpose (such as Master Mind), implementing some natural language processing to represent a belief as something more meaningful than simply
+a combination of propositional logic symbols, or allowing the use of first-order logic to make the belief base representation more powerful. 
 
 \bibliography{bib/bib}
 
