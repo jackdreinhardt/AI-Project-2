@@ -1,19 +1,19 @@
-from convert2CNF import convert2CNF
+# from convert2CNF import convert2CNF
 from belief_base import BeliefBase,Belief
 
-def cnf(s):
-    '''Takes in a string of propositional logic and returns the same string in cnf
+# def cnf(s):
+#     '''Takes in a string of propositional logic and returns the same string in cnf
 
-    Valid propositional logic operators:
-    AND = ^
-    OR = v
-    NOT = ~
-    IMPLIES = ->
-    BICONDITIONAL = <->
+#     Valid propositional logic operators:
+#     AND = ^
+#     OR = v
+#     NOT = ~
+#     IMPLIES = ->
+#     BICONDITIONAL = <->
 
-    Returns a string of propositional logic in Conjunctive Normal Form (cnf)
-    '''
-    return convert2CNF.CNF(s)
+#     Returns a string of propositional logic in Conjunctive Normal Form (cnf)
+#     '''
+#     return convert2CNF.CNF(s)
 
 def belief_base(s=''):
     '''Construct a belief base from a propositional logic sentence
