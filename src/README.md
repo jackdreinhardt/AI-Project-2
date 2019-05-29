@@ -13,6 +13,10 @@ There is no main funciton that runs our belief revision engine. The belief revis
 An example file has been provided -  `example.py` - demonstrating the proper use of the module's functions. Only functions included in `belief_revision_engine.py` should be used; internal functions of any classes are not intended to be accessed by the user. There are comments at the beginning of each function detailing their behavior. The functions are restated for redundancy here.
 
 ### Functions
+#### **`cnf(s)`**
+- `s` - propositional logic sentence
+- Converts a propositional sentence to Conjunctive Normal Form.
+- Does not function correctly for all inputs
 
 #### **`belief_base(s)`**
 - `s` (optional) - propositional logic sentence in cnf
