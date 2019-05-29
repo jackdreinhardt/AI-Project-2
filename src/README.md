@@ -39,6 +39,8 @@ An example file has been provided -  `example.py` - demonstrating the proper use
 
 These functions can be used to formulate all aspects of a belief revision engine. Our unit tests are included in the source code and can be run from the command line. The working directory must be `src/` and the command to run is `python -m unittest -v`.
 
+If at any point the belief base needs to be displayed to the command line, python's default `print` function is used. Additionally, the BeliefBase class plays nice with the `==` and `!=` operator for easy comparison.
+
 ### Propositional Logic Symbols
 We used the following symbols to represent propositional logic in our implementation of a belief revision engine:
 
