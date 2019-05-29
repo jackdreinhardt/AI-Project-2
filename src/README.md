@@ -39,7 +39,7 @@ These functions can be used to formulate all aspects of a belief revision engine
 We used the following symbols to represent propositional logic in our implementation of a belief revision engine:
 
 | Symbol | Operation     |
-|:------:|:-------------:|
+|:------:|:--------------|
 | `^`    | AND           |
 | `v`    | OR            |
 | `~`    | NOT           |
