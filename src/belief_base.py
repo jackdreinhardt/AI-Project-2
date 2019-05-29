@@ -2,7 +2,7 @@ from __future__ import print_function
 import copy
 import itertools
 from checkable_queue import CheckableQueue
-from convert2CNF import convert2CNF
+# from convert2CNF import convert2CNF
 from globals import *
 
 class Clause:
@@ -401,28 +401,3 @@ class BeliefBase:
         b_not = Belief(str(b),negate=True)
         self.contract(b_not, mode)
         self.add_belief(b)
-
-if __name__ == '__main__':
-    b = BeliefBase()
-    b1 = Belief("p^q^r")
-    b.add_belief(b1)
-
-    print("Belief Base: {0}".format(b))
-
-    belief = 'p^q^r^(~rvp)'
-    entails = b.entails(belief)
-    print("\nDoes the KB ential " + belief + "? " + str(entails))
-
-    prop = "(rv((n^s)v(p^m^s)))"
-    print(convert2CNF.or_over_and(prop))
-
-    prop = str(input("Please enter a sentence in propositional logic: "))
-    cnf = convert2CNF.CNF(prop)
-    print("cnf =", cnf)
-
-    #### Tests ####
-    #a^((p^q)<->r)
-    #((p->q)->r)->s
-    #~(p^q)
-    #a^(~((p^q)vb)vc
-    #(a^b)v(c^d)v(e->f)
