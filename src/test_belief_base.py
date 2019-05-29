@@ -125,6 +125,14 @@ class TestBeliefBase(unittest.TestCase):
         self.b.contract(Belief('r'),'maxichoice')
         self.assertEqual(self.b, r)
 
+    def test_contained_by(self):
+        self.b.add_belief(Belief('p'))
+        self.assertTrue(self.b.contained_by(Belief('p^q')))
+        self.b_.add_belief(Belief('p^q'))
+        self.assertTrue(self.b_.contained_by(Belief('p^q^r')))
+        self.assertFalse(self.b_.contained_by(Belief('(p)^(qvr)')))
+        self.assertFalse(self.b.contained_by(Belief('(q)^(pv~r)')))
+
     def test_partial_meet_contraction(self):
         for i in ['p', 'q', 'r']:
             self.b.add_belief(Belief(i))
@@ -132,7 +140,15 @@ class TestBeliefBase(unittest.TestCase):
         for i in ['q', 'r']:
             r.add_belief(Belief(i))
         self.b.contract(Belief('p^q'),'partial-meet')
-        # print(self.b)
+        self.assertEqual(self.b, r)
+
+        self.b.clear_beliefs()
+        for i in ['p', '~pvr','r', 'p^q']:
+            self.b.add_belief(Belief(i))
+        r.clear_beliefs()
+        r.add_belief(Belief('rv~p'))
+        self.b.contract(Belief('r'),'partial-meet')
+        self.assertEqual(self.b, r)
 
     def test_revision(self):
         for i in ['p', 'q', 'r']:

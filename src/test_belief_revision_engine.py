@@ -38,12 +38,22 @@ class TestBeliefRevisionEngine(unittest.TestCase):
         self.assertEqual(b, r)
 
         b = belief_base()
-        for i in ['p', 'q', '~pvr','r']:
+        for i in ['p', '~pvr','r', 'p^q']:
             expand(b, i)
         r = belief_base()
-        for i in ['q', 'rv~p']:
-            expand(r, i)
+        expand(r, 'rv~p')
         contract(b, 'r','partial-meet')
+        self.assertEqual(b, r)
+
+        b = belief_base()
+        for i in ['p', 'q', 'r']:
+            expand(b, i)
+        r = belief_base()
+        for i in ['q', 'r']:
+            expand(r, i)
+        contract(b, 'p^q','partial-meet')
+        self.assertEqual(b, r)
+
 
     def test_revision(self):
         b = belief_base()
