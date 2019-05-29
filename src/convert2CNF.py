@@ -317,10 +317,7 @@ class convert2CNF:
            if s!=len(new_middle_part)-1:
                output+=op2
         return left + output+right
-            
-        
-        
-    
+
     @staticmethod        
     def isCnf(prop):
         #This method checks wether the input string is already in CNF format or not
@@ -337,16 +334,3 @@ class convert2CNF:
                 in_clause-=1
         else:
             return True
-        
-    @staticmethod
-    def convert_to_cnf(prop):
-        while prop.find(BICONDITIONAL) != -1:
-            prop = convert2CNF.solveBiconditional(prop)
-        while prop.find(IMPLIES) != -1:
-            prop = convert2CNF.solveImplication(prop)
-        for c in range(len(prop)-1):
-            if prop[c] == NOT and prop[c+1] == "(":
-                prop = convert2CNF.deMorgan(prop, c)
-        while(convert2CNF.detect_distribution(prop,OR)):
-            prop = convert2CNF.or_over_and(prop)
-        return prop
