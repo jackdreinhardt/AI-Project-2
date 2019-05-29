@@ -2,7 +2,7 @@ from __future__ import print_function
 import copy
 import itertools
 from checkable_queue import CheckableQueue
-# from convert2CNF import convert2CNF
+from convert2CNF import convert2CNF
 from globals import *
 
 class Clause:
