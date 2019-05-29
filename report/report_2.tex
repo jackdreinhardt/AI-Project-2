@@ -30,8 +30,8 @@ Project report on\\
 \section{Introduction}
 \label{sec:intro}
 Belief revision is a necessary component of any artificially intelligent system that plans to adapt its knowledge as new inputs come in. AGM belief revision theory
-consists of three methods of adapting a belief base: expansion (+), contraction (/) and revision (*). Levi's identity shows how to build a general algorithm for revision
-using only expansion and contraction since $B*p=(B/p)+p$. In this report, the method of partial meet contraction will be described in detail in section \ref{sec:revision}.
+consists of three methods of adapting a belief base: expansion (+), contraction ($\div$) and revision (*). Levi's identity shows how to build a general algorithm for revision
+using only expansion and contraction since $B*p=(B\div p)+p$. In this report, the method of partial meet contraction will be described in detail in section \ref{sec:revision}.
 The belief base will check for logical entailment of beliefs with a resolution-based method as described in section \ref{sec:entail}, which is utilized when performing
 belief contraction. Specific implementation details will be described throughout the report.
 
@@ -112,13 +112,7 @@ $STEP-COST(s,a)$ & step cost is 1 \\
 \end{tabular}
 \end{table}
 
-An example of the search algorithm on a belief base is shown in Figure \ref{fig:BFS}. Now that the remainder sets are calculated, the different methods for completing contraction can be explained.
-\begin{figure}[!htb]
-\centering
-% \includegraphics[width=0.45\linewidth]{figures/img1.PNG}
-\caption{Example of BFS on the remainder set problem $B \bot\varphi$ where $B = \{p,q,r\}$, and $\varphi = \{p \wedge q\}$}
-\label{fig:BFS}
-\end{figure}
+Now that the remainder sets are calculated, the different methods for completing contraction can be explained. They include maxichoice contraction, full-meet contraction, and partial-meet contraction.
 
 \subsubsection{Maxichoice Contraction}
 \label{subsubsec:maxichoice}
@@ -138,24 +132,14 @@ The belief revision engine assigns values to beliefs based on if one belief is e
 \label{subsec:revision}
 Now that the belief revision engine has the capability to perform contraction of the three types listed in section \ref{subsec:contraction}, it is capable of performing revision. The belief revision engine takes a belief base, $\varphi$, and a contraction method. The engine then negates $\varphi$ and performs contraction of the specified method of $\neg\varphi$ on $B$. After this has completed, $B$ is simply expanded by $\varphi$.
 
-% PROOF?
-% EE1 by transitivity of entailment and ^
-% EE2 by def of alg
-% EE3 by def of alg
-% EE4
-% EE5
-
 
 \section{What We've Learned}
 \label{sec:learned}
-
+Throughout the project we learned more about belief revision and entailment. We learned about different ways to choose the remainder sets to intersect in partial-meet contraction - specifically epistemic entrenchment and its properties. There is a lot of freedom when choosing sets to intersect in partial-meet contraction, and there are likely many creative ways to yield great contraction solutions. Finally, we found out that conversion to Conjunctive Normal Form is hard and there are many edge cases to think about.
 
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
-The algorithms described in this report ultimately give the AI agent the ability to add new beliefs to its belief base, remove contradictory beliefs, and check whether
-a belief is entailed by the belief base. The AI agent, however, only works with propositional logic sentences. Future work on this AI agent could include applying the
-belief revision to a specific purpose (such as Master Mind), implementing some natural language processing to represent a belief as something more meaningful than simply
-a combination of propositional logic symbols, or allowing the use of first-order logic to make the belief base representation more powerful. 
+The algorithms described in this report ultimately give the AI agent the ability to add new beliefs to its belief base, remove contradictory beliefs, and check whether a belief is entailed by the belief base. The AI agent, however, only works with propositional logic sentences. Future work on this AI agent could include applying the belief revision to a specific purpose (such as Master Mind), implementing some natural language processing to represent a belief as something more meaningful than simply a combination of propositional logic symbols, or allowing the use of first-order logic to make the belief base representation more powerful. 
 
 \bibliography{bib/bib}
 
