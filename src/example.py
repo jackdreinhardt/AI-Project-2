@@ -1,4 +1,4 @@
-from belief_revision_engine import cnf,belief_base,entails,expand,contract,revise
+from belief_revision_engine import belief_base,entails,expand,contract,revise
 
 b = belief_base()
 for beliefs in ['p','q^r']:
