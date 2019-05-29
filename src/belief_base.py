@@ -23,23 +23,38 @@ class Clause:
                 # remove first symbol from
                 c1 = c1.replace(c1[0], "", 1)
 
-    def show(self):
-        str = ""
-        for symbol in self.positives:
-            str += symbol + OR
-        for symbol in self.negatives:
-            str += NOT + symbol + OR
-        str = str[:len(str)-1]
-        print(str)
+    def __eq__(self, other):
+        if len(self.positives) != len(other.positives) or len(self.negatives) != len(other.negatives):
+            return False
+        for symbol1 in self.positives: # ensure each positive symbol has a match
+            match = False
+            for symbol2 in other.positives:
+                if symbol1 == symbol2:
+                    match = True
+                    break
+            if match == False:
+                return False
+        for symbol1 in self.negatives: # ensure each negative symbol has a match
+            match = False
+            for symbol2 in other.negatives:
+                if symbol1 == symbol2:
+                    match = True
+                    break
+            if match == False:
+                return False
+        return True
 
-    def to_string(self):
-        str = ""
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __str__(self):
+        s = ""
         for symbol in self.positives:
-            str += symbol + OR
+            s += symbol + OR
         for symbol in self.negatives:
-            str += NOT + symbol + OR
-        str = str[:len(str)-1]
-        return str
+            s += NOT + symbol + OR
+        s = s[:len(s)-1]
+        return s
 
     def del_positive_symbol(self, s):
         self.positives.remove(s)
@@ -69,28 +84,6 @@ class Clause:
         for symbol in c.negatives:
             result.negatives.append(symbol)
         return result
-
-    @staticmethod
-    def equals(c1, c2):
-        if len(c1.positives) != len(c2.positives) or len(c1.negatives) != len(c2.negatives):
-            return False
-        for symbol1 in c1.positives: # ensure each positive symbol has a match
-            match = False
-            for symbol2 in c2.positives:
-                if symbol1 == symbol2:
-                    match = True
-                    break
-            if match == False:
-                return False
-        for symbol1 in c1.negatives: # ensure each negative symbol has a match
-            match = False
-            for symbol2 in c2.negatives:
-                if symbol1 == symbol2:
-                    match = True
-                    break
-            if match == False:
-                return False
-        return True
 
     @staticmethod
     def negate_clause(c):
@@ -206,34 +199,18 @@ class Belief:
         differences = copy.copy(self.clauses)
         for selfclause in self.clauses:
             for itemclause in item.clauses:
-                if Clause.equals(selfclause,itemclause):
+                if selfclause == itemclause:
                     differences.remove(selfclause)
         return len(differences) == 0
 
     def __ne__(self, item):
         return not self.__eq__(item)
 
-    def show(self):
-        total_str = ''
-        for c in self.clauses:
-            str = '(' + c.to_string() + ")^"
-            total_str += str
-        total_str = total_str[:len(total_str)-1]
-        print(total_str)
-
-    def to_string(self):
-        total_str = ''
-        for c in self.clauses:
-            str = '(' + c.to_string() + ")^"
-            total_str += str
-        total_str = total_str[:len(total_str)-1]
-        return total_str
-
     def __str__(self):
         total_str = ''
         for c in self.clauses:
-            str = '(' + c.to_string() + ")^"
-            total_str += str
+            clause = '(' + str(c) + ")^"
+            total_str += clause
         total_str = total_str[:len(total_str)-1]
         return total_str
 
@@ -262,12 +239,11 @@ class BeliefBase:
     def __hash__(self):
         return BeliefBase.hashnum
 
-
     def __str__(self):
         if len(self.beliefs) != 0:
             out = '{'
             for ele in self.beliefs:
-                out = out + ele.to_string() + ', '
+                out = out + str(ele) + ', '
             return out[:len(out)-2] + '}'
         return '{}'
 
@@ -278,7 +254,7 @@ class BeliefBase:
         for belief in self.beliefs:
             same_belief = True
             for c1,c2 in zip(belief.clauses,b.clauses):
-                if not Clause.equals(c1,c2):
+                if c1 != c2:
                     same_belief = False
             if same_belief:
                 self.beliefs.remove(belief)
@@ -301,7 +277,6 @@ class BeliefBase:
         return inter_b
 
     def entails(self, belief):
-        # belief is a string
         # method that checks if the belief base entails b using resolution
         new_b = Belief(belief, True) # create negation of the belief
 
@@ -317,7 +292,7 @@ class BeliefBase:
             clause_added = False
             for c1 in all_clauses:
                 for c2 in all_clauses:
-                    if not Clause.equals(c1, c2) and (c1,c2) not in resolved_clauses:
+                    if c1 != c2 and (c1,c2) not in resolved_clauses:
                     # if c1 and c2 are not equal and have not already been resolved
                         result = Clause.resolve(c1, c2) # resolve c1 and c2
                         if result.isEmpty(): # if the resolvent is empty
@@ -326,7 +301,7 @@ class BeliefBase:
                         # add resolvent if it is unique
                         add_clause = True
                         for c3 in all_clauses:
-                            if Clause.equals(result, c3):
+                            if result == c3:
                                 add_clause = False
                         if add_clause:
                             clause_added = True
@@ -355,9 +330,9 @@ class BeliefBase:
                     bi.add_belief(self.beliefs[i])
                     bj = BeliefBase()
                     bj.add_belief(self.beliefs[j])
-                    if bi.entails(self.beliefs[j].to_string()):
+                    if bi.entails(str(self.beliefs[j])):
                         self.beliefs[j].entrenchment += 1
-                    if bj.entails(self.beliefs[i].to_string()):
+                    if bj.entails(str(self.beliefs[i])):
                         self.beliefs[i].entrenchment += 1
         # square entrenchment value to put more value on deeper entrenchment
         for belief in self.beliefs:
@@ -383,8 +358,8 @@ class BeliefBase:
         Backward Clause Selection - implemented using BFS
         '''
         frontier = CheckableQueue()
-        frontier.put(self)
         expanded = CheckableQueue()
+        frontier.put(self)
         remainders = []
         inclusion_max = 0
         while True:
@@ -392,7 +367,7 @@ class BeliefBase:
                 return remainders
             n = frontier.get()
             expanded.put(n)
-            if not n.entails(b.to_string()) and n not in remainders:
+            if not n.entails(str(b)) and n not in remainders:
                 # ensure only maximal length remainders are returned
                 if inclusion_max > 0:
                     if len(n.beliefs) == inclusion_max:
@@ -407,7 +382,7 @@ class BeliefBase:
                     frontier.put(n_copy)
 
     def revise(self, b, mode='partial-meet'):
-        b_not = Belief(b.to_string(),negate=True)
+        b_not = Belief(str(b),negate=True)
         self.contract(b_not, mode)
         self.add_belief(b)
 
