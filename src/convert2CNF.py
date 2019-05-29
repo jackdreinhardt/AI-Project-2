@@ -56,8 +56,10 @@ class convert2CNF:
         # print("Solve DISTRIBUTIONS:")
         prop = convert2CNF.or_over_and(prop)
         # print("Transformed: " + prop)
-        
-        return prop
+
+        while prop[0] == '(' and prop[len(prop)-1] == ')':
+            prop = prop[1:len(prop)-1]
+        return '(' + prop + ')'
 #
 #        while(convert2CNF.detect_distribution(prop,OR)):
 #            # print("Solve DISTRIBUTIONS:")
@@ -130,7 +132,7 @@ class convert2CNF:
     def solveBiconditional(prop):
         idx = prop.find(BICONDITIONAL)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
-        middlePart = middlePart.split("<->")
+        middlePart = middlePart.split("<->",1)
         cnf = str("(" + middlePart[0] + IMPLIES + middlePart[1] + ")" + AND + "(" + middlePart[1] + IMPLIES + middlePart[0] + ")")
         prop = str(left + cnf + right)
         return prop
@@ -142,7 +144,7 @@ class convert2CNF:
     def solveImplication(prop):
         idx = prop.find(IMPLIES)
         left, middlePart, right = convert2CNF.divideSentence(prop, idx)
-        middlePart = middlePart.split("->")
+        middlePart = middlePart.split("->", 1)
         cnf = str("(" + NOT + middlePart[0] + OR + middlePart[1] + ")")
         prop = left + cnf + right
         return prop
