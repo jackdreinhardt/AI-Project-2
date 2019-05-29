@@ -29,7 +29,7 @@ Project report on\\
 
 \section{Introduction}
 \label{sec:intro}
-
+Introduction in which you describe the problem of belief revision in general terms and then describe your specific approach.
 
 \section{Design and Implementation}
 \label{sec:design}
@@ -117,16 +117,29 @@ An example of the search algorithm on a belief base is shown in Figure \ref{fig:
 \end{figure}
 
 \subsubsection{Maxichoice Contraction}
-\label{sec:maxichoice}
+\label{subsubsec:maxichoice}
 The simplest method to choose remainders is using Maxichoice contraction. This method involves picking a random remainder and returning it. The belief revision engine always returns the first remainder calculated by the Backward Clause Selection algorithm. This method is not the best, as it does not take into account any other remainder.
 
 \subsubsection{Full-Meet Contraction}
-\label{sec:fullmeet}
+\label{subsubsec:fullmeet}
 Another simple method to choose remainders is to take the intersection of all remainder sets. If $R$ is the set of remainders, contraction returns $\bigcap\limits_{i=1}^{\norm{R}} R_i$. The belief revision engine does just this, and intersects all remainders calculated by the Backwards Clause Selection algorithm. This is also not an ideal solution, as the result of contraction is much too small to be useful.
 
 \subsubsection{Partial-Meet Contraction}
-\label{sec:partialmeet}
-A more complex method to choose remainders is to take the intersection of \textit{some} of the remainder sets.
+\label{subsubsec:partialmeet}
+A more complex method to choose remainders is to take the intersection of \textit{some} of the remainder sets. The interesting aspect of partial-meet contraction is how the remainder sets are chosen. Each belief in the original belief base is assigned a entrenchment value. This value should reflect how deeply this belief is held in the belief base and satisfy the requirements for Epistemic Entrenchment. The difficult aspect of partial-meet contraction is assigning values to each belief so that we have a valid Epistemic Entrentchment scheme, denoted by $\leq$. Once these values are assigned though, the belief revision engine computes all possible remainder intersections. From these possible contraction results, the engine finds the intersection that has the maximum entrenchment sum of the beliefs. This implies that the result of contraction will have the highest possible total entrenchment value, and therefore favor the deepest held beliefs over weaker held beliefs.
+
+The belief revision engine assigns values to beliefs based on if one belief is entailed by another and if a belief is contained in a conjunction of another belief. $\varphi$ and $\psi$ are beliefs. If $\varphi \models \psi$, then $\varphi \leq \psi$ and the entrenchment value of $\psi$ increases by 1. If $\varphi \in B$ and $\varphi\wedge\psi \in B$, then $\varphi\leq\varphi\wedge\psi$ and the entrenchment value of $\varphi\wedge\psi$ increases by 1. After this algorithm is run on the uncontracted belief base, we have a valid ordering satisfying the 5 requirements from epistemic entrenchment. We then square the entrenchment values in order to assign more value to deeper held beliefs. This comes into effect when we calculate the maximum entrenchment sum of the intersected beliefs.
+
+\subsection{Revsion}
+\label{subsec:revision}
+Now that the belief revision engine has the capability to perform contraction of the three types listed in section \ref{subsec:contraction}, it is capable of performing revision. The belief revision engine takes a belief base, $\varphi$, and a contraction method. The engine then negates $\varphi$ and performs contraction of the specified method of $\neg\varphi$ on $B$. After this has completed, $B$ is simply expanded by $\varphi$.
+
+% PROOF?
+% EE1 by transitivity of entailment and ^
+% EE2 by def of alg
+% EE3 by def of alg
+% EE4
+% EE5
 
 
 \section{What We've Learned}
