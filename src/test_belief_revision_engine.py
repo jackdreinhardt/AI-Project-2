@@ -1,12 +1,12 @@
 import unittest
-from belief_revision_engine import cnf,belief_base,entails,expand,contract,revise
+from belief_revision_engine import belief_base,entails,expand,contract,revise
 
 # to run the tests:
 # python -m unittest test_belief_revision.py -v
 
 class TestBeliefRevisionEngine(unittest.TestCase):
-    def test_cnf(self):
-        self.assertEqual(cnf('p^q'),'(p^q)')
+    # def test_cnf(self):
+    #     self.assertEqual(cnf('p^q'),'(p^q)')
 
     # tests the entails function
     def test_entails(self):
