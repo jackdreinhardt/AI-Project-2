@@ -46,6 +46,6 @@ We used the following symbols to represent propositional logic in our implementa
 | `->`   | IMPLIES       |
 | `<->`  | BICONDITIONAL |
 
-It is imperative that parenthesis are used appropriately when using our cnf conversion tool. Statements like `p->q->r` are ambigious and are undefined in our engine. This should be replaced with `(p->q)->r` or `p->(q->r)`.
+***Note:*** It is imperative that parenthesis are used appropriately when using our cnf conversion tool. Statements like `p->q->r` are ambigious and are undefined in our engine. This should be replaced with `(p->q)->r` or `p->(q->r)`.
 
 
